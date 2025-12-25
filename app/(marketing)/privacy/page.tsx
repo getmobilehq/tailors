@@ -236,8 +236,8 @@ export default function PrivacyPage() {
                 If you have questions or concerns about this privacy policy or our data practices, please contact us:
               </p>
               <p>
-                <strong>Email:</strong> privacy@tailorspace.com<br />
-                <strong>Data Protection Officer:</strong> dpo@tailorspace.com<br />
+                <strong>Email:</strong> privacy@tailorspace.uk<br />
+                <strong>Data Protection Officer:</strong> dpo@tailorspace.uk<br />
                 <strong>Address:</strong> TailorSpace Ltd, Nottingham, UK
               </p>
               <p>

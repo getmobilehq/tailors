@@ -189,7 +189,7 @@ export default function TermsPage() {
                 If you have any questions about these Terms, please contact us at:
               </p>
               <p>
-                <strong>Email:</strong> legal@tailorspace.com<br />
+                <strong>Email:</strong> legal@tailorspace.uk<br />
                 <strong>Address:</strong> TailorSpace Ltd, Nottingham, UK
               </p>
             </CardContent>

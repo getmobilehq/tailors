@@ -6,8 +6,8 @@ import OrderStatusUpdateEmail from '@/emails/order-status-update'
 // Initialize Resend (will use RESEND_API_KEY from env)
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM_EMAIL = 'TailorSpace <orders@tailorspace.com>' // Update with your verified domain
-const REPLY_TO = 'support@tailorspace.com' // Update with your support email
+const FROM_EMAIL = 'TailorSpace <orders@tailorspace.uk>'
+const REPLY_TO = 'support@tailorspace.uk'
 
 interface OrderConfirmationData {
   to: string
