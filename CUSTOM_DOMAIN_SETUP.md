@@ -45,11 +45,9 @@ TTL: 3600
 ```
 Type: CNAME
 Name: www
-Value: your-site-name.netlify.app
+Value: tailorsp.netlify.app
 TTL: 3600
 ```
-
-**Note:** Replace `your-site-name.netlify.app` with your actual Netlify URL.
 
 ---
 
