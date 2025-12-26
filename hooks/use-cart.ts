@@ -1,7 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Service, CartItem } from '@/lib/types'
 import { DELIVERY_FEE } from '@/lib/constants'
 
@@ -72,6 +72,13 @@ export const useCart = create<CartStore>()(
     }),
     {
       name: 'tailorspace-cart',
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined' ? window.localStorage : {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        }
+      ),
     }
   )
 )
