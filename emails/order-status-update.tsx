@@ -61,7 +61,7 @@ const statusDetails: Record<string, { subject: string; message: string; emoji: s
     subject: 'Order complete - Thank you!',
     message: 'Your order is complete. Thank you for choosing TailorSpace!',
     emoji: '⭐',
-    nextStep: 'We'd love to hear your feedback. Please take a moment to rate your experience.',
+    nextStep: 'We would love to hear your feedback. Please take a moment to rate your experience.',
   },
 }
 

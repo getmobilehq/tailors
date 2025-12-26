@@ -89,21 +89,27 @@ export default async function AdminDashboardPage() {
     .eq('role', 'tailor')
 
   // Flatten profiles for easier use
-  const runnersData = runners?.map(r => ({
-    id: r.id,
-    full_name: r.full_name,
-    role: r.role,
-    rating: Array.isArray(r.runner_profile) ? r.runner_profile[0]?.rating : r.runner_profile?.rating,
-    total_reviews: Array.isArray(r.runner_profile) ? r.runner_profile[0]?.total_reviews : r.runner_profile?.total_reviews,
-  })) || []
+  const runnersData = runners?.map(r => {
+    const profile = Array.isArray(r.runner_profile) ? r.runner_profile[0] : r.runner_profile
+    return {
+      id: r.id,
+      full_name: r.full_name,
+      role: r.role,
+      rating: profile?.rating,
+      total_reviews: profile?.total_reviews,
+    }
+  }) || []
 
-  const tailorsData = tailors?.map(t => ({
-    id: t.id,
-    full_name: t.full_name,
-    role: t.role,
-    rating: Array.isArray(t.tailor_profile) ? t.tailor_profile[0]?.rating : t.tailor_profile?.rating,
-    total_reviews: Array.isArray(t.tailor_profile) ? t.tailor_profile[0]?.total_reviews : t.tailor_profile?.total_reviews,
-  })) || []
+  const tailorsData = tailors?.map(t => {
+    const profile = Array.isArray(t.tailor_profile) ? t.tailor_profile[0] : t.tailor_profile
+    return {
+      id: t.id,
+      full_name: t.full_name,
+      role: t.role,
+      rating: profile?.rating,
+      total_reviews: profile?.total_reviews,
+    }
+  }) || []
 
   const stats = [
     {

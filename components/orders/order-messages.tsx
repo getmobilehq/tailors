@@ -62,10 +62,10 @@ export function OrderMessages({ orderId, currentUserId }: OrderMessagesProps) {
 
           const newMsg = {
             ...payload.new as Message,
-            sender
+            sender: sender || undefined
           }
 
-          setMessages((prev) => [...prev, newMsg])
+          setMessages((prev) => [...prev, newMsg as any])
 
           // Mark as read if not sent by current user
           if (payload.new.sender_id !== currentUserId) {

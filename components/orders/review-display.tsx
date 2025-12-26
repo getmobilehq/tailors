@@ -63,16 +63,16 @@ export function ReviewDisplay({ review, showCustomer = true }: ReviewDisplayProp
       <CardContent className="space-y-4">
         {/* Individual Ratings */}
         <div className="grid grid-cols-2 gap-4">
-          {review.runner_rating && (
+          {(review as any).runner_rating && (
             <div>
               <p className="text-sm text-muted-foreground mb-1">Runner</p>
-              <StarDisplay rating={review.runner_rating} />
+              <StarDisplay rating={(review as any).runner_rating} />
             </div>
           )}
-          {review.tailor_rating && (
+          {(review as any).tailor_rating && (
             <div>
               <p className="text-sm text-muted-foreground mb-1">Tailor</p>
-              <StarDisplay rating={review.tailor_rating} />
+              <StarDisplay rating={(review as any).tailor_rating} />
             </div>
           )}
         </div>

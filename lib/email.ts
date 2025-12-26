@@ -31,7 +31,7 @@ interface OrderStatusUpdateData {
 
 export async function sendOrderConfirmation(data: OrderConfirmationData) {
   try {
-    const emailHtml = render(
+    const emailHtml = await render(
       OrderConfirmationEmail({
         customerName: data.customerName,
         orderNumber: data.orderNumber,
@@ -60,7 +60,7 @@ export async function sendOrderConfirmation(data: OrderConfirmationData) {
 
 export async function sendOrderStatusUpdate(data: OrderStatusUpdateData) {
   try {
-    const emailHtml = render(
+    const emailHtml = await render(
       OrderStatusUpdateEmail({
         customerName: data.customerName,
         orderNumber: data.orderNumber,

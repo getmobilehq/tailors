@@ -88,7 +88,7 @@ export function AdminOrderActions({ order, runners, tailors }: AdminOrderActions
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label>Status</Label>
-          <Select value={newStatus} onValueChange={setNewStatus}>
+          <Select value={newStatus} onValueChange={(value) => setNewStatus(value as typeof newStatus)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

@@ -56,7 +56,7 @@ export default async function PricingPage() {
                 </div>
                 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categoryServices.map((service) => (
+                  {categoryServices.map((service: any) => (
                     <Card key={service.id} className="hover:shadow-md transition-shadow">
                       <CardHeader>
                         <div className="flex justify-between items-start">

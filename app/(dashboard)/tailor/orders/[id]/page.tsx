@@ -150,7 +150,7 @@ export default async function TailorOrderPage({ params }: { params: { id: string
                     {Object.entries(order.measurements).map(([key, value]) => (
                       <div key={key}>
                         <p className="text-sm text-muted-foreground capitalize">{key}</p>
-                        <p className="font-semibold">{value} cm</p>
+                        <p className="font-semibold">{String(value)} cm</p>
                       </div>
                     ))}
                   </div>
