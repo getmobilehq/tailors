@@ -5,6 +5,8 @@ node_modules
 
 # testing
 /coverage
+*-test/
+*.test.*
 
 # next.js
 /.next/
