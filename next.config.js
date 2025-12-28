@@ -21,6 +21,10 @@ const nextConfig = {
     }
     return config
   },
+  // Skip static optimization for routes that use zustand persist
+  experimental: {
+    optimizePackageImports: ['zustand'],
+  },
 }
 
 module.exports = nextConfig
