@@ -48,8 +48,11 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 3 }: PhotoUplo
         // Generate unique filename
         const fileExt = file.name.split('.').pop()
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+
+        // Get user ID or create a session-based folder for anonymous users
         const { data: { user } } = await supabase.auth.getUser()
-        const filePath = `${user?.id}/${fileName}`
+        const userId = user?.id || `anon-${Date.now()}-${Math.random().toString(36).substring(2)}`
+        const filePath = `${userId}/${fileName}`
 
         // Upload to Supabase Storage
         const { error: uploadError, data } = await supabase.storage

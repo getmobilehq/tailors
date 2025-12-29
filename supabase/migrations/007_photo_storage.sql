@@ -8,13 +8,12 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies for order-photos bucket
 
--- Allow authenticated users to upload photos
-CREATE POLICY "Authenticated users can upload photos"
+-- Allow anyone (including anonymous users) to upload photos
+CREATE POLICY "Anyone can upload photos"
 ON storage.objects FOR INSERT
-TO authenticated
+TO public
 WITH CHECK (
   bucket_id = 'order-photos'
-  AND auth.uid() IS NOT NULL
 );
 
 -- Allow authenticated users to view all photos
@@ -23,14 +22,13 @@ ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'order-photos');
 
--- Allow users to delete their own photos (within 24 hours)
-CREATE POLICY "Users can delete their recent uploads"
+-- Allow anyone to delete recent uploads (within 1 hour)
+CREATE POLICY "Anyone can delete recent uploads"
 ON storage.objects FOR DELETE
-TO authenticated
+TO public
 USING (
   bucket_id = 'order-photos'
-  AND auth.uid()::text = (storage.foldername(name))[1]
-  AND created_at > NOW() - INTERVAL '24 hours'
+  AND created_at > NOW() - INTERVAL '1 hour'
 );
 
 -- Success message
@@ -39,7 +37,7 @@ BEGIN
   RAISE NOTICE '✅ Photo storage bucket created!';
   RAISE NOTICE '';
   RAISE NOTICE 'Bucket: order-photos (public)';
-  RAISE NOTICE 'Users can upload photos during booking';
+  RAISE NOTICE 'Anyone (including guests) can upload photos during booking';
   RAISE NOTICE 'Photos are publicly accessible';
-  RAISE NOTICE 'Users can delete their uploads within 24 hours';
+  RAISE NOTICE 'Anyone can delete uploads within 1 hour';
 END $$;
