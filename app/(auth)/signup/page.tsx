@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 export default function SignUpPage() {
@@ -50,18 +49,10 @@ export default function SignUpPage() {
         throw new Error(data.error || 'Failed to create account')
       }
 
-      // Now log the user in
-      const supabase = createClient()
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      })
+      toast.success(data.message || 'Verification code sent to your email!')
 
-      if (loginError) throw loginError
-
-      toast.success('Account created successfully!')
-      router.push('/orders')
-      router.refresh()
+      // Redirect to verification page with email
+      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
     } catch (error: any) {
       toast.error(error.message || 'Failed to create account')
     } finally {

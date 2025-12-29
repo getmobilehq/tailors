@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
-import { sendWelcomeEmail } from '@/lib/email'
+import { sendVerificationEmail } from '@/lib/email'
 
 export async function POST(request: Request) {
   try {
@@ -18,15 +18,21 @@ export async function POST(request: Request) {
     // Use admin client with service role key (bypasses RLS)
     const supabase = createAdminClient()
 
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
+
     // Step 1: Create auth user with metadata (trigger will auto-create profile)
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm email for simplicity
+      email_confirm: false, // Require OTP verification
       user_metadata: {
         full_name,
         phone,
-        role: 'customer'
+        role: 'customer',
+        otp,
+        otp_expiry: otpExpiry
       }
     })
 
@@ -46,9 +52,9 @@ export async function POST(request: Request) {
 
     // Profile is auto-created by database trigger (handle_new_user)
 
-    // Send welcome email (don't block response if it fails)
-    sendWelcomeEmail(email, full_name).catch(err => {
-      console.error('Failed to send welcome email:', err)
+    // Send OTP verification email (don't block response if it fails)
+    sendVerificationEmail(email, full_name, otp).catch(err => {
+      console.error('Failed to send verification email:', err)
     })
 
     return NextResponse.json({
@@ -56,7 +62,8 @@ export async function POST(request: Request) {
       user: {
         id: authData.user.id,
         email: authData.user.email,
-      }
+      },
+      message: 'Verification code sent to your email'
     })
 
   } catch (error: any) {

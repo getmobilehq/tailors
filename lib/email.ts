@@ -127,3 +127,39 @@ export async function sendWelcomeEmail(to: string, name: string) {
     return { success: false, error }
   }
 }
+
+export async function sendVerificationEmail(to: string, name: string, otp: string) {
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      replyTo: REPLY_TO,
+      subject: 'Verify Your Email - TailorSpace',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Verify Your Email</h1>
+          <p>Hi ${name},</p>
+          <p>Thank you for signing up with TailorSpace! To complete your registration, please verify your email address using the code below:</p>
+
+          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 30px 0; border-radius: 8px;">
+            <h2 style="color: #333; font-size: 32px; letter-spacing: 8px; margin: 0;">${otp}</h2>
+          </div>
+
+          <p>This code will expire in 10 minutes.</p>
+          <p>If you didn't create an account with TailorSpace, please ignore this email.</p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #999; font-size: 12px;">
+            This is an automated message from TailorSpace. Please do not reply to this email.
+          </p>
+        </div>
+      `,
+    })
+
+    console.log('Verification email sent:', result)
+    return { success: true, data: result }
+  } catch (error) {
+    console.error('Failed to send verification email:', error)
+    return { success: false, error }
+  }
+}
