@@ -52,10 +52,22 @@ export async function POST(request: Request) {
 
     // Profile is auto-created by database trigger (handle_new_user)
 
-    // Send OTP verification email (don't block response if it fails)
-    sendVerificationEmail(email, full_name, otp).catch(err => {
-      console.error('Failed to send verification email:', err)
-    })
+    // Send OTP verification email
+    const emailResult = await sendVerificationEmail(email, full_name, otp)
+
+    if (!emailResult.success) {
+      console.error('Failed to send verification email:', emailResult.error)
+      // User is created but email failed - they can use resend functionality
+      return NextResponse.json({
+        success: true,
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+        },
+        message: 'Account created but email failed to send. Please use the resend button.',
+        emailFailed: true
+      })
+    }
 
     return NextResponse.json({
       success: true,

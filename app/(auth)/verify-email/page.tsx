@@ -56,8 +56,23 @@ function VerifyEmailContent() {
   }
 
   async function handleResendCode() {
-    // TODO: Implement resend OTP functionality
-    toast.info('Resend functionality coming soon')
+    try {
+      const response = await fetch('/api/auth/resend-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to resend code')
+      }
+
+      toast.success('Verification code resent! Check your email.')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to resend code')
+    }
   }
 
   return (
