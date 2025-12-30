@@ -229,6 +229,12 @@ export default function AdminDashboard() {
                 <Button asChild variant="default" className="w-full">
                   <Link href="/admin/payouts">Manage Payouts</Link>
                 </Button>
+                <Button asChild variant="default" className="w-full">
+                  <Link href="/admin/reviews">Manage Reviews</Link>
+                </Button>
+                <Button asChild variant="default" className="w-full">
+                  <Link href="/admin/reviews/analytics">Review Analytics</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
