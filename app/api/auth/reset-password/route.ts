@@ -1,7 +1,14 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { authLimiter, applyRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
+  // Apply rate limiting: 5 requests per minute per IP
+  const rateLimitResponse = await applyRateLimit(request, authLimiter, 5)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const body = await request.json()
     const { email, otp, newPassword } = body
