@@ -163,3 +163,39 @@ export async function sendVerificationEmail(to: string, name: string, otp: strin
     return { success: false, error }
   }
 }
+
+export async function sendPasswordResetEmail(to: string, name: string, otp: string) {
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      replyTo: REPLY_TO,
+      subject: 'Reset Your Password - TailorSpace',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Reset Your Password</h1>
+          <p>Hi ${name},</p>
+          <p>We received a request to reset your password. Use the code below to reset your password:</p>
+
+          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 30px 0; border-radius: 8px;">
+            <h2 style="color: #333; font-size: 32px; letter-spacing: 8px; margin: 0;">${otp}</h2>
+          </div>
+
+          <p>This code will expire in 10 minutes.</p>
+          <p>If you didn't request a password reset, please ignore this email and your password will remain unchanged.</p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #999; font-size: 12px;">
+            This is an automated message from TailorSpace. Please do not reply to this email.
+          </p>
+        </div>
+      `,
+    })
+
+    console.log('Password reset email sent:', result)
+    return { success: true, data: result }
+  } catch (error) {
+    console.error('Failed to send password reset email:', error)
+    return { success: false, error }
+  }
+}
