@@ -221,67 +221,122 @@ export default function HomePage() {
       </section>
 
       {/* Join Our Team Section */}
-      <section className="py-20 px-4 bg-muted/30">
+      <section className="py-20 px-4 bg-gradient-to-b from-white via-blue-50/30 to-purple-50/30">
         <div className="container max-w-6xl">
-          <h2 className="text-3xl text-center mb-4">Join our team</h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Be part of Nottingham's premier alterations platform. Earn money on your schedule.
-          </p>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Join our team
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Be part of Nottingham's premier alterations platform. Earn money on your schedule.
+            </p>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="pt-8 pb-6">
-                <div className="text-5xl mb-4 text-center">🚴</div>
-                <h3 className="font-semibold text-xl mb-3 text-center">Become a Runner</h3>
-                <p className="text-sm text-muted-foreground mb-6 text-center">
-                  Earn money by collecting and delivering garments. Flexible hours, great pay.
-                </p>
-                <ul className="text-sm space-y-2 mb-6">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                    <span>Flexible schedule - work when you want</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                    <span>Competitive earnings per pickup/delivery</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                    <span>Training provided - no experience needed</span>
-                  </li>
-                </ul>
-                <Button asChild className="w-full" variant="default">
-                  <Link href="/apply/runner">Apply as Runner</Link>
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Concierge Card */}
+            <Card className="relative overflow-hidden border-2 hover:border-blue-400 transition-all duration-300 hover:shadow-2xl group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-bl-full"></div>
+              <CardContent className="pt-10 pb-8 px-8 relative">
+                <div className="flex justify-center mb-6">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-4xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    🚴
+                  </div>
+                </div>
+
+                <div className="text-center mb-6">
+                  <h3 className="font-bold text-2xl mb-2 bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                    Join as Concierge
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Be the face of TailorSpace. Collect garments, take measurements, and deliver smiles.
+                  </p>
+                </div>
+
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/50 hover:bg-blue-50 transition-colors">
+                    <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Flexible schedule</p>
+                      <p className="text-xs text-muted-foreground">Work when you want, where you want</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/50 hover:bg-blue-50 transition-colors">
+                    <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Competitive earnings</p>
+                      <p className="text-xs text-muted-foreground">Great pay per pickup & delivery</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/50 hover:bg-blue-50 transition-colors">
+                    <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Full training provided</p>
+                      <p className="text-xs text-muted-foreground">No experience needed to start</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300" size="lg">
+                  <Link href="/apply/runner">Apply as Concierge →</Link>
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="pt-8 pb-6">
-                <div className="text-5xl mb-4 text-center">✂️</div>
-                <h3 className="font-semibold text-xl mb-3 text-center">Become a Tailor</h3>
-                <p className="text-sm text-muted-foreground mb-6 text-center">
-                  Join our network of expert tailors. Steady work, fair compensation.
-                </p>
-                <ul className="text-sm space-y-2 mb-6">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                    <span>Consistent flow of quality work</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                    <span>Fair pricing for your expertise</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                    <span>Work from your own workshop</span>
-                  </li>
-                </ul>
-                <Button asChild className="w-full" variant="default">
-                  <Link href="/apply/tailor">Apply as Tailor</Link>
+            {/* Tailor Card */}
+            <Card className="relative overflow-hidden border-2 hover:border-purple-400 transition-all duration-300 hover:shadow-2xl group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-bl-full"></div>
+              <CardContent className="pt-10 pb-8 px-8 relative">
+                <div className="flex justify-center mb-6">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-4xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    ✂️
+                  </div>
+                </div>
+
+                <div className="text-center mb-6">
+                  <h3 className="font-bold text-2xl mb-2 bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
+                    Sew For TailorSpace
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Join our network of expert tailors. Showcase your craft and build your reputation.
+                  </p>
+                </div>
+
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50/50 hover:bg-purple-50 transition-colors">
+                    <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Steady workflow</p>
+                      <p className="text-xs text-muted-foreground">Consistent quality work delivered to you</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50/50 hover:bg-purple-50 transition-colors">
+                    <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Fair compensation</p>
+                      <p className="text-xs text-muted-foreground">Competitive rates for your expertise</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50/50 hover:bg-purple-50 transition-colors">
+                    <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Work from anywhere</p>
+                      <p className="text-xs text-muted-foreground">Use your own workshop or studio</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button asChild className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl transition-all duration-300" size="lg">
+                  <Link href="/apply/tailor">Start Sewing With Us →</Link>
                 </Button>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mt-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              ⭐ Join over 50+ professionals already earning with TailorSpace
+            </p>
           </div>
         </div>
       </section>
