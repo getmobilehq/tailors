@@ -220,6 +220,15 @@ export default function AdminDashboard() {
                 <Button asChild variant="default" className="w-full">
                   <Link href="/admin/services">Manage Services</Link>
                 </Button>
+                <Button asChild variant="default" className="w-full">
+                  <Link href="/admin/payments">Payment History</Link>
+                </Button>
+                <Button asChild variant="default" className="w-full">
+                  <Link href="/admin/analytics">View Analytics</Link>
+                </Button>
+                <Button asChild variant="default" className="w-full">
+                  <Link href="/admin/payouts">Manage Payouts</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
