@@ -220,6 +220,72 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Join Our Team Section */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="container max-w-6xl">
+          <h2 className="text-3xl text-center mb-4">Join our team</h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Be part of Nottingham's premier alterations platform. Earn money on your schedule.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="pt-8 pb-6">
+                <div className="text-5xl mb-4 text-center">🚴</div>
+                <h3 className="font-semibold text-xl mb-3 text-center">Become a Runner</h3>
+                <p className="text-sm text-muted-foreground mb-6 text-center">
+                  Earn money by collecting and delivering garments. Flexible hours, great pay.
+                </p>
+                <ul className="text-sm space-y-2 mb-6">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span>Flexible schedule - work when you want</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span>Competitive earnings per pickup/delivery</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span>Training provided - no experience needed</span>
+                  </li>
+                </ul>
+                <Button asChild className="w-full" variant="default">
+                  <Link href="/apply/runner">Apply as Runner</Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="pt-8 pb-6">
+                <div className="text-5xl mb-4 text-center">✂️</div>
+                <h3 className="font-semibold text-xl mb-3 text-center">Become a Tailor</h3>
+                <p className="text-sm text-muted-foreground mb-6 text-center">
+                  Join our network of expert tailors. Steady work, fair compensation.
+                </p>
+                <ul className="text-sm space-y-2 mb-6">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span>Consistent flow of quality work</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span>Fair pricing for your expertise</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span>Work from your own workshop</span>
+                  </li>
+                </ul>
+                <Button asChild className="w-full" variant="default">
+                  <Link href="/apply/tailor">Apply as Tailor</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-4 bg-primary text-white text-center">
         <div className="container max-w-3xl">
