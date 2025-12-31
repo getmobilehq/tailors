@@ -75,11 +75,11 @@ export default function ProviderProfilePage() {
         runnerProfile = tailorProfile
       }
 
-      setProfile(runnerProfile)
+      setProfile(runnerProfile as any)
 
       if (runnerProfile) {
         // Load reviews for this provider
-        const isRunner = runnerProfile.users.role === 'runner'
+        const isRunner = (runnerProfile as any).users.role === 'runner'
         const { data: reviewsData } = await supabase
           .from('reviews')
           .select(`
@@ -96,7 +96,7 @@ export default function ProviderProfilePage() {
           .order('created_at', { ascending: false })
           .limit(20)
 
-        setReviews(reviewsData || [])
+        setReviews((reviewsData as any) || [])
       }
     } catch (error) {
       console.error('Error loading profile:', error)

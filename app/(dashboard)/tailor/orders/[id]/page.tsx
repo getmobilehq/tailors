@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/orders/status-badge'
 import { TailorActions } from '@/components/tailor/tailor-actions'
 import { OrderTimeline } from '@/components/orders/order-timeline'
 import { OrderMessages } from '@/components/orders/order-messages'
+import { OrderItemPhotos } from '@/components/orders/order-item-photos'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { ArrowLeft, User, Calendar } from 'lucide-react'
 import Link from 'next/link'
@@ -123,15 +124,15 @@ export default async function TailorOrderPage({ params }: { params: { id: string
                     </div>
 
                     {item.photos && item.photos.length > 0 && (
-                      <div className="flex gap-2 mt-3">
-                        {item.photos.map((photo: string, i: number) => (
-                          <img
-                            key={i}
-                            src={photo}
-                            alt={`Garment ${i + 1}`}
-                            className="w-20 h-20 object-cover rounded"
-                          />
-                        ))}
+                      <div className="mt-3">
+                        <p className="text-sm font-medium mb-2 text-muted-foreground">
+                          Customer Photos ({item.photos.length})
+                        </p>
+                        <OrderItemPhotos
+                          photos={item.photos}
+                          description={item.garment_description}
+                          variant="gallery"
+                        />
                       </div>
                     )}
                   </div>

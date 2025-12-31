@@ -46,14 +46,14 @@ DROP POLICY IF EXISTS "Tailors can view assigned orders" ON public.orders;
 CREATE POLICY "Customers can view own orders"
   ON public.orders FOR SELECT
   USING (
-    auth.uid() = user_id
+    auth.uid() = customer_id
   );
 
 -- Customers can only insert orders for themselves
 CREATE POLICY "Customers can insert own orders"
   ON public.orders FOR INSERT
   WITH CHECK (
-    auth.uid() = user_id
+    auth.uid() = customer_id
   );
 
 -- Runners can only view orders assigned to them
@@ -121,7 +121,7 @@ CREATE POLICY "Users can view own payments"
     EXISTS (
       SELECT 1 FROM public.orders
       WHERE orders.id = order_id
-      AND orders.user_id = auth.uid()
+      AND orders.customer_id = auth.uid()
     )
   );
 
@@ -156,7 +156,7 @@ CREATE POLICY "Customers can create reviews for completed orders"
     AND EXISTS (
       SELECT 1 FROM public.orders
       WHERE orders.id = order_id
-      AND orders.user_id = auth.uid()
+      AND orders.customer_id = auth.uid()
       AND orders.status IN ('delivered', 'completed')
     )
     AND NOT EXISTS (
@@ -240,7 +240,7 @@ CREATE POLICY "Users can view relevant messages"
       SELECT 1 FROM public.orders
       WHERE orders.id = order_id
       AND (
-        orders.user_id = auth.uid()
+        orders.customer_id = auth.uid()
         OR orders.runner_id = auth.uid()
         OR orders.tailor_id = auth.uid()
       )
@@ -256,7 +256,7 @@ CREATE POLICY "Users can send relevant messages"
       SELECT 1 FROM public.orders
       WHERE orders.id = order_id
       AND (
-        orders.user_id = auth.uid()
+        orders.customer_id = auth.uid()
         OR orders.runner_id = auth.uid()
         OR orders.tailor_id = auth.uid()
       )

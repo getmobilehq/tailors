@@ -86,7 +86,7 @@ export default function ReviewAnalyticsPage() {
         .order('rating', { ascending: false })
         .limit(5)
 
-      const topRunners = (runners || []).map(r => ({
+      const topRunners = (runners || []).map((r: any) => ({
         id: r.user_id,
         name: r.users?.full_name || 'Unknown',
         rating: r.rating || 0,
@@ -101,7 +101,7 @@ export default function ReviewAnalyticsPage() {
         .order('rating', { ascending: false })
         .limit(5)
 
-      const topTailors = (tailors || []).map(t => ({
+      const topTailors = (tailors || []).map((t: any) => ({
         id: t.user_id,
         name: t.users?.full_name || 'Unknown',
         rating: t.rating || 0,

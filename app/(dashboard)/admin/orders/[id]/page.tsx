@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/orders/status-badge'
 import { AdminOrderActions } from '@/components/admin/admin-order-actions'
 import { OrderTimeline } from '@/components/orders/order-timeline'
 import { OrderMessages } from '@/components/orders/order-messages'
+import { OrderItemPhotos } from '@/components/orders/order-item-photos'
 import { formatPrice, formatDate, formatDateTime } from '@/lib/utils'
 import { ArrowLeft, MapPin, Calendar, Package, User } from 'lucide-react'
 import Link from 'next/link'
@@ -108,17 +109,19 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                   Items
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {order.items?.map((item: any) => (
-                  <div key={item.id} className="flex gap-4 pb-4 border-b last:border-0">
-                    {item.photos?.[0] && (
-                      <img
-                        src={item.photos[0]}
-                        alt={item.garment_description}
-                        className="w-20 h-20 object-cover rounded-lg"
-                      />
-                    )}
-                    <div className="flex-1">
+                  <div key={item.id} className="pb-6 border-b last:border-0 space-y-3">
+                    {/* Item Info Row */}
+                    <div className="flex gap-4">
+                      {item.photos && item.photos.length > 0 && (
+                        <OrderItemPhotos
+                          photos={item.photos}
+                          description={item.garment_description}
+                          variant="thumbnail"
+                        />
+                      )}
+                      <div className="flex-1">
                       <h4 className="font-semibold mb-1">{item.service?.name}</h4>
                       <p className="text-sm text-muted-foreground mb-2">
                         {item.garment_description}
@@ -143,12 +146,27 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{formatPrice(item.price)}</p>
-                      {item.quantity > 1 && (
-                        <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                      )}
+                      <div className="text-right">
+                        <p className="font-semibold">{formatPrice(item.price)}</p>
+                        {item.quantity > 1 && (
+                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Photo Gallery (if multiple photos) */}
+                    {item.photos && item.photos.length > 1 && (
+                      <div>
+                        <p className="text-sm font-medium mb-2 text-muted-foreground">
+                          All Photos ({item.photos.length})
+                        </p>
+                        <OrderItemPhotos
+                          photos={item.photos}
+                          description={item.garment_description}
+                          variant="gallery"
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </CardContent>

@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/orders/status-badge'
 import { RunnerActions } from '@/components/runner/runner-actions'
 import { OrderTimeline } from '@/components/orders/order-timeline'
 import { OrderMessages } from '@/components/orders/order-messages'
+import { OrderItemPhotos } from '@/components/orders/order-item-photos'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { ArrowLeft, MapPin, Calendar, Phone, User } from 'lucide-react'
 import Link from 'next/link'
@@ -93,7 +94,7 @@ export default async function RunnerOrderPage({ params }: { params: { id: string
               </CardHeader>
               <CardContent className="space-y-4">
                 {order.items?.map((item: any) => (
-                  <div key={item.id} className="pb-4 border-b last:border-0">
+                  <div key={item.id} className="pb-6 border-b last:border-0 space-y-3">
                     <div className="flex justify-between mb-2">
                       <h4 className="font-semibold">{item.service?.name}</h4>
                       <span className="font-semibold">{formatPrice(item.price)}</span>
@@ -102,15 +103,15 @@ export default async function RunnerOrderPage({ params }: { params: { id: string
                       {item.garment_description}
                     </p>
                     {item.photos && item.photos.length > 0 && (
-                      <div className="flex gap-2">
-                        {item.photos.map((photo: string, i: number) => (
-                          <img
-                            key={i}
-                            src={photo}
-                            alt=""
-                            className="w-20 h-20 object-cover rounded"
-                          />
-                        ))}
+                      <div>
+                        <p className="text-sm font-medium mb-2 text-muted-foreground">
+                          Customer Photos ({item.photos.length})
+                        </p>
+                        <OrderItemPhotos
+                          photos={item.photos}
+                          description={item.garment_description}
+                          variant="gallery"
+                        />
                       </div>
                     )}
                     {item.notes && (

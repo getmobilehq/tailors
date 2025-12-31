@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { ZoomableImage } from '@/components/ui/zoomable-image'
 
 interface PhotoUploadProps {
   photos: string[]
@@ -104,15 +105,15 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 3 }: PhotoUplo
         <div className="grid grid-cols-3 gap-4">
           {photos.map((photo, index) => (
             <div key={index} className="relative group aspect-square">
-              <img
+              <ZoomableImage
                 src={photo}
-                alt={`Upload ${index + 1}`}
+                alt={`Uploaded garment photo ${index + 1}`}
                 className="w-full h-full object-cover rounded-lg border-2 border-gray-200"
               />
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
               >
                 <X className="h-4 w-4" />
               </button>
