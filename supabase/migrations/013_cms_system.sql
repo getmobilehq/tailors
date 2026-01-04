@@ -2,10 +2,17 @@
 -- Allows admins to manage page content and site settings
 
 -- =============================================
+-- DROP EXISTING TABLES (if any)
+-- =============================================
+
+DROP TABLE IF EXISTS public.site_content CASCADE;
+DROP TABLE IF EXISTS public.site_settings CASCADE;
+
+-- =============================================
 -- SITE CONTENT TABLE
 -- =============================================
 
-CREATE TABLE IF NOT EXISTS public.site_content (
+CREATE TABLE public.site_content (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   page VARCHAR(100) NOT NULL,           -- 'home', 'how-it-works', 'pricing', 'apply'
   section VARCHAR(100) NOT NULL,         -- 'hero', 'features', 'faq', 'cta'
@@ -29,7 +36,7 @@ CREATE INDEX idx_site_content_active ON public.site_content(is_active);
 -- SITE SETTINGS TABLE
 -- =============================================
 
-CREATE TABLE IF NOT EXISTS public.site_settings (
+CREATE TABLE public.site_settings (
   key VARCHAR(100) PRIMARY KEY,
   value JSONB NOT NULL,
   description TEXT,
