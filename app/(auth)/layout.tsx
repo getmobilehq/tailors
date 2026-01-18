@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function AuthLayout({
   children,
@@ -9,9 +10,15 @@ export default function AuthLayout({
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container h-16 flex items-center">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl">✂️</span>
-            <span className="font-bold text-xl">TailorSpace</span>
+          <Link href="/" className="flex items-center space-x-3">
+            <Image
+              src="/logos/tailorspace-icon-final.svg"
+              alt="TailorSpace"
+              width={32}
+              height={32}
+              className="h-8 w-8"
+            />
+            <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-dm-sans)' }}>TailorSpace</span>
           </Link>
         </div>
       </header>
