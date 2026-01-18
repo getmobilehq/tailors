@@ -73,9 +73,6 @@
       "overrides": {
             "tailwindcss": "^3.4.19"
       },
-      "devDependencies": {
-            "@netlify/plugin-nextjs": "^5.15.5"
-      },
       "scripts": {
             "dev": "next dev",
             "build": "next build",
