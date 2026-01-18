@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -44,9 +45,15 @@ export function DashboardNav({ user }: DashboardNavProps) {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl">✂️</span>
-            <span className="font-bold text-xl">TailorSpace</span>
+          <Link href="/" className="flex items-center space-x-3">
+            <Image
+              src="/logos/tailorspace-icon-final.svg"
+              alt="TailorSpace"
+              width={32}
+              height={32}
+              className="h-8 w-8"
+            />
+            <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-dm-sans)' }}>TailorSpace</span>
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
