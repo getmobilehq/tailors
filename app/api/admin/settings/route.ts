@@ -25,17 +25,25 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    let query = supabase
-      .from('site_settings')
-      .select('*')
-      .order('category', { ascending: true })
-      .order('key', { ascending: true })
+    let data, error
 
     if (key) {
-      query = query.eq('key', key).single()
+      const result = await supabase
+        .from('site_settings')
+        .select('*')
+        .eq('key', key)
+        .single()
+      data = result.data
+      error = result.error
+    } else {
+      const result = await supabase
+        .from('site_settings')
+        .select('*')
+        .order('category', { ascending: true })
+        .order('key', { ascending: true })
+      data = result.data
+      error = result.error
     }
-
-    const { data, error } = await query
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
