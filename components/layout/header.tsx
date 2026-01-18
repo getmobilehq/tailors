@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,6 +15,7 @@ import {
 import { useUser } from '@/hooks/use-user'
 import { createClient } from '@/lib/supabase/client'
 import { NotificationBell } from './notification-bell'
+import { CartButton } from './cart-button'
 import { User, LogOut, Package, Settings, Scissors, ShieldCheck } from 'lucide-react'
 
 export function Header() {
@@ -30,9 +32,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="text-2xl">✂️</span>
-          <span className="font-bold text-xl">TailorSpace</span>
+        <Link href="/" className="flex items-center space-x-3">
+          <Image
+            src="/logos/tailorspace-icon-final.svg"
+            alt="TailorSpace"
+            width={32}
+            height={32}
+            className="h-8 w-8"
+          />
+          <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-dm-sans)' }}>TailorSpace</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6">
@@ -58,6 +66,7 @@ export function Header() {
                 <Link href="/book">Book Now</Link>
               </Button>
 
+              <CartButton />
               <NotificationBell />
 
               <DropdownMenu>
@@ -122,6 +131,7 @@ export function Header() {
             </>
           ) : (
             <>
+              <CartButton />
               <Button variant="ghost" asChild>
                 <Link href="/login">Sign In</Link>
               </Button>

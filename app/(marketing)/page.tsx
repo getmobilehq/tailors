@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { CheckCircle, Clock, MapPin, Shield } from 'lucide-react'
+import { TeamCards } from '@/components/marketing/team-cards'
 
 export const metadata = {
   title: 'TailorSpace - Expert Alterations Delivered to Your Door | Nottingham',
@@ -63,9 +64,9 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* Hero Section */}
-      <section className="relative py-20 px-4 text-center bg-gradient-to-b from-blue-50 via-white to-white">
+      <section className="relative py-20 px-4 text-center bg-gradient-to-b from-[--brand-primary-50] via-white to-white">
         <div className="container max-w-4xl">
-          <h1 className="text-4xl md:text-6xl tracking-tight mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             Expert alterations,<br />delivered to your door
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -83,15 +84,15 @@ export default function HomePage() {
           
           <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5" style={{ color: 'var(--success)' }} />
               <span>Fixed Prices</span>
             </div>
             <div className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-blue-600" />
+              <MapPin className="h-5 w-5" style={{ color: 'var(--brand-primary)' }} />
               <span>Serving Nottingham</span>
             </div>
             <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-purple-600" />
+              <Shield className="h-5 w-5" style={{ color: 'var(--actor-tailor)' }} />
               <span>Insured Service</span>
             </div>
           </div>
@@ -101,7 +102,7 @@ export default function HomePage() {
       {/* How it Works */}
       <section className="py-20 px-4 bg-white">
         <div className="container max-w-6xl">
-          <h2 className="text-3xl text-center mb-4">How it works</h2>
+          <h2 className="text-3xl font-bold text-center mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>How it works</h2>
           <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
             Professional alterations made easy with our unique 4-step process
           </p>
@@ -151,7 +152,7 @@ export default function HomePage() {
       {/* Why Choose Us */}
       <section className="py-20 px-4 bg-muted/30">
         <div className="container max-w-6xl">
-          <h2 className="text-3xl text-center mb-12">Why choose TailorSpace?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12" style={{ fontFamily: 'var(--font-dm-sans)' }}>Why choose TailorSpace?</h2>
           
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -186,7 +187,7 @@ export default function HomePage() {
       {/* Popular Services */}
       <section className="py-20 px-4">
         <div className="container max-w-6xl">
-          <h2 className="text-3xl text-center mb-4">Popular services</h2>
+          <h2 className="text-3xl font-bold text-center mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Popular services</h2>
           <p className="text-center text-muted-foreground mb-12">
             From simple hems to complex alterations, we handle it all
           </p>
@@ -221,10 +222,10 @@ export default function HomePage() {
       </section>
 
       {/* Join Our Team Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-white via-blue-50/30 to-purple-50/30">
+      <section className="py-20 px-4 bg-gradient-to-b from-white via-[--actor-runner-light]/30 to-[--actor-tailor-light]/30">
         <div className="container max-w-6xl">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ fontFamily: 'var(--font-dm-sans)', background: 'linear-gradient(135deg, var(--actor-runner), var(--actor-tailor))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Join our team
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -232,105 +233,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Concierge Card */}
-            <Card className="relative overflow-hidden border-2 hover:border-blue-400 transition-all duration-300 hover:shadow-2xl group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-bl-full"></div>
-              <CardContent className="pt-10 pb-8 px-8 relative">
-                <div className="flex justify-center mb-6">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-4xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    🚴
-                  </div>
-                </div>
-
-                <div className="text-center mb-6">
-                  <h3 className="font-bold text-2xl mb-2 bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                    Join as Concierge
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Be the face of TailorSpace. Collect garments, take measurements, and deliver smiles.
-                  </p>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/50 hover:bg-blue-50 transition-colors">
-                    <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Flexible schedule</p>
-                      <p className="text-xs text-muted-foreground">Work when you want, where you want</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/50 hover:bg-blue-50 transition-colors">
-                    <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Competitive earnings</p>
-                      <p className="text-xs text-muted-foreground">Great pay per pickup & delivery</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/50 hover:bg-blue-50 transition-colors">
-                    <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Full training provided</p>
-                      <p className="text-xs text-muted-foreground">No experience needed to start</p>
-                    </div>
-                  </div>
-                </div>
-
-                <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300" size="lg">
-                  <Link href="/apply/runner">Apply as Concierge →</Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Tailor Card */}
-            <Card className="relative overflow-hidden border-2 hover:border-purple-400 transition-all duration-300 hover:shadow-2xl group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-bl-full"></div>
-              <CardContent className="pt-10 pb-8 px-8 relative">
-                <div className="flex justify-center mb-6">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-4xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    ✂️
-                  </div>
-                </div>
-
-                <div className="text-center mb-6">
-                  <h3 className="font-bold text-2xl mb-2 bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
-                    Sew For TailorSpace
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Join our network of expert tailors. Showcase your craft and build your reputation.
-                  </p>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50/50 hover:bg-purple-50 transition-colors">
-                    <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Steady workflow</p>
-                      <p className="text-xs text-muted-foreground">Consistent quality work delivered to you</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50/50 hover:bg-purple-50 transition-colors">
-                    <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Fair compensation</p>
-                      <p className="text-xs text-muted-foreground">Competitive rates for your expertise</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50/50 hover:bg-purple-50 transition-colors">
-                    <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Work from anywhere</p>
-                      <p className="text-xs text-muted-foreground">Use your own workshop or studio</p>
-                    </div>
-                  </div>
-                </div>
-
-                <Button asChild className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl transition-all duration-300" size="lg">
-                  <Link href="/apply/tailor">Start Sewing With Us →</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          <TeamCards />
 
           {/* Additional Info */}
           <div className="mt-12 text-center">
@@ -344,7 +247,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-20 px-4 bg-primary text-white text-center">
         <div className="container max-w-3xl">
-          <h2 className="text-3xl md:text-4xl mb-4">Ready to get started?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Ready to get started?</h2>
           <p className="text-lg mb-2 opacity-90">
             Serving Nottingham • Fixed prices • No hidden fees
           </p>

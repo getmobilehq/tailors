@@ -1,0 +1,325 @@
+/**
+ * TailorSpace Design Tokens
+ * Version: 1.0
+ * Last Updated: January 2026
+ * 
+ * This file contains all CSS custom properties for the TailorSpace brand.
+ * Import this file first in your stylesheet chain.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ══════════════════════════════════════════════════════════════════════════
+     BRAND COLORS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  /* Primary - Indigo */
+  --brand-primary: #4F46E5;
+  --brand-primary-light: #6366F1;
+  --brand-primary-dark: #3730A3;
+  --brand-primary-50: #EEF2FF;
+  
+  /* Accent - Amber (The Golden Destination) */
+  --brand-accent: #F59E0B;
+  --brand-accent-light: #FBBF24;
+  --brand-accent-dark: #D97706;
+  
+  /* Gradients */
+  --brand-gradient: linear-gradient(135deg, #4F46E5, #6366F1);
+  --brand-gradient-dark: linear-gradient(135deg, #3730A3, #4F46E5);
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     ACTOR COLORS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  /* Customer - Indigo */
+  --actor-customer: #4F46E5;
+  --actor-customer-light: #EEF2FF;
+  --actor-customer-dark: #3730A3;
+  
+  /* Runner - Emerald */
+  --actor-runner: #10B981;
+  --actor-runner-light: #D1FAE5;
+  --actor-runner-dark: #047857;
+  
+  /* Tailor - Violet */
+  --actor-tailor: #8B5CF6;
+  --actor-tailor-light: #EDE9FE;
+  --actor-tailor-dark: #6D28D9;
+  
+  /* Operations - Amber */
+  --actor-ops: #F59E0B;
+  --actor-ops-light: #FEF3C7;
+  --actor-ops-dark: #B45309;
+  
+  /* Platform/System - Slate */
+  --actor-platform: #64748B;
+  --actor-platform-light: #F1F5F9;
+  --actor-platform-dark: #334155;
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     ORDER PHASE COLORS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --phase-booking: #4F46E5;
+  --phase-booking-light: #EEF2FF;
+  
+  --phase-pickup: #10B981;
+  --phase-pickup-light: #D1FAE5;
+  
+  --phase-processing: #8B5CF6;
+  --phase-processing-light: #EDE9FE;
+  
+  --phase-qc: #F59E0B;
+  --phase-qc-light: #FEF3C7;
+  
+  --phase-delivery: #EF4444;
+  --phase-delivery-light: #FEE2E2;
+  
+  --phase-complete: #06B6D4;
+  --phase-complete-light: #CFFAFE;
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     SEMANTIC COLORS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --success-dark: #047857;
+  
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --warning-dark: #B45309;
+  
+  --danger: #EF4444;
+  --danger-light: #FEE2E2;
+  --danger-dark: #B91C1C;
+  
+  --info: #06B6D4;
+  --info-light: #CFFAFE;
+  --info-dark: #0E7490;
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     NEUTRAL PALETTE (Slate)
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --slate-50: #F8FAFC;
+  --slate-100: #F1F5F9;
+  --slate-200: #E2E8F0;
+  --slate-300: #CBD5E1;
+  --slate-400: #94A3B8;
+  --slate-500: #64748B;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1E293B;
+  --slate-900: #0F172A;
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     TYPOGRAPHY
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  /* Font Families */
+  --font-display: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Type Scale */
+  --text-xs: 0.6875rem;    /* 11px */
+  --text-sm: 0.8125rem;    /* 13px */
+  --text-base: 0.875rem;   /* 14px */
+  --text-md: 1rem;         /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 2rem;        /* 32px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+  
+  /* Font Weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  
+  /* Letter Spacing */
+  --tracking-tight: -0.5px;
+  --tracking-normal: 0;
+  --tracking-wide: 0.5px;
+  --tracking-wider: 1px;
+  --tracking-widest: 1.5px;
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     SPACING
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;   /* 2px */
+  --space-1: 0.25rem;      /* 4px */
+  --space-1-5: 0.375rem;   /* 6px */
+  --space-2: 0.5rem;       /* 8px */
+  --space-2-5: 0.625rem;   /* 10px */
+  --space-3: 0.75rem;      /* 12px */
+  --space-3-5: 0.875rem;   /* 14px */
+  --space-4: 1rem;         /* 16px */
+  --space-5: 1.25rem;      /* 20px */
+  --space-6: 1.5rem;       /* 24px */
+  --space-7: 1.75rem;      /* 28px */
+  --space-8: 2rem;         /* 32px */
+  --space-9: 2.25rem;      /* 36px */
+  --space-10: 2.5rem;      /* 40px */
+  --space-11: 2.75rem;     /* 44px */
+  --space-12: 3rem;        /* 48px */
+  --space-14: 3.5rem;      /* 56px */
+  --space-16: 4rem;        /* 64px */
+  --space-20: 5rem;        /* 80px */
+  --space-24: 6rem;        /* 96px */
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     BORDER RADIUS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --radius-none: 0;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     SHADOWS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  
+  /* Colored shadows for emphasis */
+  --shadow-brand: 0 4px 14px rgba(79, 70, 229, 0.25);
+  --shadow-success: 0 4px 14px rgba(16, 185, 129, 0.25);
+  --shadow-warning: 0 4px 14px rgba(245, 158, 11, 0.25);
+  --shadow-danger: 0 4px 14px rgba(239, 68, 68, 0.25);
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     TRANSITIONS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-slower: 500ms ease;
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     Z-INDEX SCALE
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+  
+  
+  /* ══════════════════════════════════════════════════════════════════════════
+     CONTAINER WIDTHS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  --container-xs: 20rem;   /* 320px */
+  --container-sm: 24rem;   /* 384px */
+  --container-md: 28rem;   /* 448px */
+  --container-lg: 32rem;   /* 512px */
+  --container-xl: 36rem;   /* 576px */
+  --container-2xl: 42rem;  /* 672px */
+  --container-3xl: 48rem;  /* 768px */
+  --container-4xl: 56rem;  /* 896px */
+  --container-5xl: 64rem;  /* 1024px */
+  --container-6xl: 72rem;  /* 1152px */
+  --container-7xl: 80rem;  /* 1280px */
+  --container-full: 100%;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DARK MODE OVERRIDES (for Operations Console)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"],
+.dark {
+  --bg-primary: #0F172A;
+  --bg-secondary: #1E293B;
+  --bg-tertiary: #334155;
+  --bg-card: rgba(255, 255, 255, 0.02);
+  --bg-card-hover: rgba(255, 255, 255, 0.05);
+  
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-secondary: rgba(255, 255, 255, 0.05);
+  
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-tertiary: #94A3B8;
+  --text-muted: #64748B;
+  
+  /* Dark mode shadows with color */
+  --shadow-glow-brand: 0 0 30px rgba(79, 70, 229, 0.3);
+  --shadow-glow-accent: 0 0 30px rgba(245, 158, 11, 0.3);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PORTAL-SPECIFIC THEMES
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Customer Portal */
+[data-portal="customer"] {
+  --portal-primary: var(--actor-customer);
+  --portal-primary-light: var(--actor-customer-light);
+  --portal-primary-dark: var(--actor-customer-dark);
+}
+
+/* Runner App */
+[data-portal="runner"] {
+  --portal-primary: var(--actor-runner);
+  --portal-primary-light: var(--actor-runner-light);
+  --portal-primary-dark: var(--actor-runner-dark);
+}
+
+/* Tailor Portal */
+[data-portal="tailor"] {
+  --portal-primary: var(--actor-tailor);
+  --portal-primary-light: var(--actor-tailor-light);
+  --portal-primary-dark: var(--actor-tailor-dark);
+}
+
+/* Operations Console */
+[data-portal="ops"] {
+  --portal-primary: var(--actor-ops);
+  --portal-primary-light: var(--actor-ops-light);
+  --portal-primary-dark: var(--actor-ops-dark);
+}

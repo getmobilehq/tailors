@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export function Footer() {
   return (
@@ -6,9 +7,15 @@ export function Footer() {
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <span className="text-2xl">✂️</span>
-              <span className="font-bold text-lg">TailorSpace</span>
+            <div className="flex items-center space-x-3 mb-4">
+              <Image
+                src="/logos/tailorspace-icon-final.svg"
+                alt="TailorSpace"
+                width={28}
+                height={28}
+                className="h-7 w-7"
+              />
+              <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-dm-sans)' }}>TailorSpace</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Expert alterations delivered to your door across Nottingham.

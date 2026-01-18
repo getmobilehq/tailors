@@ -1,0 +1,13 @@
+<svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="#4F46E5"/>
+  
+  <!-- The Space (container) -->
+  <rect x="90" y="90" width="332" height="332" rx="83" stroke="white" stroke-width="19" fill="none"/>
+  
+  <!-- Running Stitch - the journey -->
+  <path d="M154 256H205M230 256H281M307 256H358" stroke="white" stroke-width="22" stroke-linecap="round"/>
+  
+  <!-- Golden destination -->
+  <circle cx="358" cy="256" r="26" fill="#FBBF24"/>
+</svg>

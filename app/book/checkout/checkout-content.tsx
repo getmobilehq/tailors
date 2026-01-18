@@ -181,7 +181,7 @@ export default function CheckoutContent() {
           toast.error('Please log in to continue')
           // Save form data to restore after login
           localStorage.setItem('checkout_form_data', JSON.stringify(formData))
-          router.push('/login?redirect=/book/checkout')
+          router.push('/login?redirect=/cart')
           return
         }
 

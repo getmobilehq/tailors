@@ -8,9 +8,15 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-card text-card-foreground",
+        default: "bg-card text-card-foreground border-border",
         destructive:
-          "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
+          "text-destructive bg-[--danger-light] border-[--danger] [&>svg]:text-destructive *:data-[slot=alert-description]:text-destructive/90",
+        success:
+          "text-[--success-dark] bg-[--success-light] border-[--success] [&>svg]:text-[--success-dark] *:data-[slot=alert-description]:text-[--success-dark]/90",
+        warning:
+          "text-[--warning-dark] bg-[--warning-light] border-[--warning] [&>svg]:text-[--warning-dark] *:data-[slot=alert-description]:text-[--warning-dark]/90",
+        info:
+          "text-[--info-dark] bg-[--info-light] border-[--info] [&>svg]:text-[--info-dark] *:data-[slot=alert-description]:text-[--info-dark]/90",
       },
     },
     defaultVariants: {

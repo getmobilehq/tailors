@@ -1,13 +1,30 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Inter, DM_Sans } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { RecaptchaProvider } from "@/components/providers/recaptcha-provider"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({
+  subsets: ["latin"],
+  variable: '--font-inter',
+  weight: ['400', '500', '600', '700', '800']
+})
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: '--font-dm-sans',
+  weight: ['500', '600', '700']
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', type: 'image/svg+xml', sizes: '512x512' }
+    ],
+    apple: { url: '/icon.svg', type: 'image/svg+xml' }
+  },
   title: {
     default: "TailorSpace - Expert Alterations Delivered to Your Door | Nottingham",
     template: "%s | TailorSpace"
@@ -63,7 +80,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${dmSans.variable} ${inter.className}`}>
         <RecaptchaProvider>
           {children}
           <Toaster />

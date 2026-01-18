@@ -1,0 +1,13 @@
+<svg viewBox="0 0 220 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo Mark -->
+  <rect width="56" height="56" rx="14" fill="#4F46E5"/>
+  <!-- The Space (container) -->
+  <rect x="9.8" y="9.8" width="36.4" height="36.4" rx="9.1" stroke="white" stroke-width="2.1" fill="none"/>
+  <!-- Running Stitch - the journey -->
+  <path d="M16.8 28H22.4M28 28H33.6M39.2 28" stroke="white" stroke-width="2.45" stroke-linecap="round"/>
+  <!-- Golden destination -->
+  <circle cx="39.2" cy="28" r="2.8" fill="#FBBF24"/>
+  
+  <!-- Wordmark -->
+  <text x="68" y="38" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#0F172A" letter-spacing="-0.5">TailorSpace</text>
+</svg>
