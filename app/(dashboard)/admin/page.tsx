@@ -27,8 +27,8 @@ export default async function AdminDashboardPage() {
     redirect('/orders')
   }
 
-  // Get all orders with service details for analytics
-  const { data: allOrders } = await supabase
+  // Get recent orders for dashboard (limit 10)
+  const { data: recentOrders } = await supabase
     .from('orders')
     .select(`
       *,
@@ -41,12 +41,23 @@ export default async function AdminDashboardPage() {
       )
     `)
     .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(10)
 
-  // Get active orders
-  const activeOrders = allOrders?.filter(o => 
+  // Get total count for stats
+  const { count: totalOrdersCount } = await supabase
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+
+  // Get active orders from recent orders
+  const activeOrders = recentOrders?.filter(o =>
     !['completed', 'cancelled'].includes(o.status)
-  )
+  ) || []
+
+  // Get count of all active orders
+  const { count: activeOrdersCount } = await supabase
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+    .not('status', 'in', '(completed,cancelled)')
 
   // Get stats
   const { data: completedOrders } = await supabase
@@ -114,7 +125,7 @@ export default async function AdminDashboardPage() {
   const stats = [
     {
       title: 'Active Orders',
-      value: activeOrders?.length || 0,
+      value: activeOrdersCount || 0,
       icon: Package,
       color: 'text-blue-600',
     },
@@ -168,22 +179,80 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="active" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="active">
-            Active ({activeOrders?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="all">
-            All Orders ({allOrders?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="recent" className="space-y-6">
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="recent">
+              Recent Orders
+            </TabsTrigger>
+            <TabsTrigger value="active">
+              Active ({activeOrders.length})
+            </TabsTrigger>
+            <TabsTrigger value="analytics">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+          </TabsList>
+          <Button asChild variant="outline">
+            <Link href="/admin/orders">
+              View All Orders ({totalOrdersCount || 0})
+            </Link>
+          </Button>
+        </div>
+
+        <TabsContent value="recent" className="space-y-4">
+          {!recentOrders || recentOrders.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center text-muted-foreground">
+                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No orders yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            recentOrders.map((order) => (
+              <Link key={order.id} href={`/admin/orders/${order.id}`}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg mb-1">
+                          {order.order_number}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {order.customer?.full_name} • {formatDate(order.created_at)}
+                        </p>
+                      </div>
+                      <StatusBadge status={order.status} />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground mb-1">Items</p>
+                        <p className="font-medium">{order.items?.length || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">Runner</p>
+                        <p className="font-medium">{order.runner?.full_name || 'Unassigned'}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">Tailor</p>
+                        <p className="font-medium">{order.tailor?.full_name || 'Unassigned'}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-muted-foreground mb-1">Total</p>
+                        <p className="font-bold text-primary">{formatPrice(order.total)}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))
+          )}
+        </TabsContent>
 
         <TabsContent value="active" className="space-y-4">
-          {!activeOrders || activeOrders.length === 0 ? (
+          {activeOrders.length === 0 ? (
             <Card>
               <CardContent className="py-16 text-center text-muted-foreground">
                 <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -235,63 +304,12 @@ export default async function AdminDashboardPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="all" className="space-y-4">
-          {!allOrders || allOrders.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No orders yet</p>
-              </CardContent>
-            </Card>
-          ) : (
-            allOrders.map((order) => (
-              <Link key={order.id} href={`/admin/orders/${order.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg mb-1">
-                          {order.order_number}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          {order.customer?.full_name} • {formatDate(order.created_at)}
-                        </p>
-                      </div>
-                      <StatusBadge status={order.status} />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground mb-1">Items</p>
-                        <p className="font-medium">{order.items?.length || 0}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Runner</p>
-                        <p className="font-medium">{order.runner?.full_name || 'Unassigned'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Tailor</p>
-                        <p className="font-medium">{order.tailor?.full_name || 'Unassigned'}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-muted-foreground mb-1">Total</p>
-                        <p className="font-bold text-primary">{formatPrice(order.total)}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          )}
-        </TabsContent>
-
         <TabsContent value="analytics" className="space-y-6">
-          <AnalyticsCharts orders={allOrders || []} />
+          <AnalyticsCharts orders={recentOrders || []} />
           <TeamPerformance
             runners={runnersData}
             tailors={tailorsData}
-            orders={allOrders || []}
+            orders={recentOrders || []}
           />
         </TabsContent>
       </Tabs>
