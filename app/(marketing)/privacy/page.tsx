@@ -141,7 +141,7 @@ export default function PrivacyPage() {
                 <li><strong>Right to Withdraw Consent:</strong> Withdraw consent for marketing communications</li>
               </ul>
               <p>
-                To exercise any of these rights, please contact us at privacy@tailorspace.com.
+                To exercise any of these rights, please contact us at support@tailorspace.uk.
               </p>
             </CardContent>
           </Card>
@@ -236,8 +236,8 @@ export default function PrivacyPage() {
                 If you have questions or concerns about this privacy policy or our data practices, please contact us:
               </p>
               <p>
-                <strong>Email:</strong> privacy@tailorspace.uk<br />
-                <strong>Data Protection Officer:</strong> dpo@tailorspace.uk<br />
+                <strong>Email:</strong> support@tailorspace.uk<br />
+                <strong>Data Protection Officer:</strong> support@tailorspace.uk<br />
                 <strong>Address:</strong> TailorSpace Ltd, Nottingham, UK
               </p>
               <p>

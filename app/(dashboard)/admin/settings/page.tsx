@@ -236,7 +236,7 @@ export default function SiteSettingsPage() {
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="hello@tailorspace.co.uk"
+                  placeholder="support@tailorspace.uk"
                 />
               </div>
               <div>

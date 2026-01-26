@@ -159,7 +159,7 @@ INSERT INTO public.site_settings (key, value, description, category) VALUES
   ('delivery_fee', '{"amount": 7, "currency": "GBP"}', 'Delivery fee per order', 'pricing'),
   ('service_area', '{"postcodes": ["NG1", "NG2", "NG3", "NG5", "NG7", "NG9"], "city": "Nottingham"}', 'Service coverage area', 'business'),
   ('business_hours', '{"monday": "9:00-18:00", "tuesday": "9:00-18:00", "wednesday": "9:00-18:00", "thursday": "9:00-18:00", "friday": "9:00-18:00", "saturday": "10:00-16:00", "sunday": "closed"}', 'Operating hours', 'business'),
-  ('contact_info', '{"email": "hello@tailorspace.co.uk", "phone": "+44 115 123 4567", "address": "Nottingham, UK"}', 'Contact information', 'business'),
+  ('contact_info', '{"email": "support@tailorspace.uk", "phone": "+44 115 123 4567", "address": "Nottingham, UK"}', 'Contact information', 'business'),
   ('turnaround_time', '{"standard": "5-7 days", "express": "2-3 days"}', 'Standard turnaround times', 'business'),
   ('features_enabled', '{"reviews": true, "applications": true, "notifications": true, "real_time_tracking": true}', 'Feature toggles', 'features'),
   ('maintenance_mode', '{"enabled": false, "message": "We are currently performing maintenance. Please check back soon."}', 'Maintenance mode settings', 'general');

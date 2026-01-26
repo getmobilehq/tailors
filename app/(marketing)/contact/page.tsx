@@ -32,10 +32,10 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold mb-1">Email</h3>
                   <a
-                    href="mailto:support@tailorspace.co.uk"
+                    href="mailto:support@tailorspace.uk"
                     className="text-muted-foreground hover:text-primary"
                   >
-                    support@tailorspace.co.uk
+                    support@tailorspace.uk
                   </a>
                   <p className="text-sm text-muted-foreground mt-1">
                     We typically respond within 24 hours
@@ -157,10 +157,10 @@ export default function ContactPage() {
               We'd love to hear from you.
             </p>
             <a
-              href="mailto:partnerships@tailorspace.co.uk"
+              href="mailto:support@tailorspace.uk"
               className="text-primary hover:underline font-medium"
             >
-              partnerships@tailorspace.co.uk
+              support@tailorspace.uk
             </a>
           </CardContent>
         </Card>
