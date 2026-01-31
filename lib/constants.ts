@@ -2,6 +2,12 @@ export const DELIVERY_FEE = 7.00
 export const CURRENCY = 'GBP'
 export const CURRENCY_SYMBOL = '£'
 
+/**
+ * @deprecated Use database categories instead
+ * Fetch from: supabase.from('categories').select('*').eq('active', true).order('sort_order')
+ * This constant is kept for backward compatibility only.
+ * Categories are now managed in the admin dashboard and stored in the database.
+ */
 export const SERVICE_CATEGORIES = [
   { id: 'trousers', name: 'Trousers & Jeans', icon: '👖' },
   { id: 'shirts', name: 'Shirts & Jumpers', icon: '👔' },

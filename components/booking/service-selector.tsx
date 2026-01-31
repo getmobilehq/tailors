@@ -5,23 +5,32 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { SERVICE_CATEGORIES } from '@/lib/constants'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from '@/hooks/use-cart'
 import type { Service } from '@/lib/types'
 import { Plus, ShoppingBag, X } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface ServiceSelectorProps {
-  services: Service[]
+interface Category {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+  description: string | null
+  sort_order: number
 }
 
-export function ServiceSelector({ services }: ServiceSelectorProps) {
+interface ServiceSelectorProps {
+  services: Service[]
+  categories: Category[]
+}
+
+export function ServiceSelector({ services, categories }: ServiceSelectorProps) {
   const router = useRouter()
   const { items, addItem, removeItem, subtotal, total } = useCart()
-  const [selectedCategory, setSelectedCategory] = useState<string>(SERVICE_CATEGORIES[0].id)
+  const [selectedCategory, setSelectedCategory] = useState<string>(categories[0]?.id || '')
 
-  const filteredServices = services.filter((s) => s.category === selectedCategory)
+  const filteredServices = services.filter((s) => s.category_id === selectedCategory)
 
   function handleAddService(service: Service) {
     addItem(service)
@@ -41,14 +50,14 @@ export function ServiceSelector({ services }: ServiceSelectorProps) {
       <div>
         {/* Category Tabs */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {SERVICE_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Button
               key={cat.id}
               variant={selectedCategory === cat.id ? 'default' : 'outline'}
               onClick={() => setSelectedCategory(cat.id)}
               className="gap-2"
             >
-              <span>{cat.icon}</span>
+              <span>{cat.icon || '✂️'}</span>
               <span>{cat.name}</span>
             </Button>
           ))}

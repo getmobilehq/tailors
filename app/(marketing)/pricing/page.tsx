@@ -3,14 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/utils'
-import { SERVICE_CATEGORIES, DELIVERY_FEE } from '@/lib/constants'
+import { DELIVERY_FEE } from '@/lib/constants'
 
 export default async function PricingPage() {
   const supabase = await createClient()
-  
+
+  // Fetch categories from database (single source of truth)
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, name, slug, icon, description, sort_order')
+    .eq('active', true)
+    .order('sort_order', { ascending: true })
+
+  // Fetch services from database
   const { data: servicesData } = await supabase
     .from('services')
-    .select('*')
+    .select(`
+      *,
+      category:categories!services_category_id_fkey(id, slug, name, icon)
+    `)
     .eq('active', true)
     .order('sort_order')
 
@@ -20,11 +31,13 @@ export default async function PricingPage() {
     price: s.base_price / 100
   })) || []
 
+  // Group services by category ID
   const servicesByCategory = services.reduce((acc, service) => {
-    if (!acc[service.category]) {
-      acc[service.category] = []
+    const categoryId = service.category_id
+    if (!acc[categoryId]) {
+      acc[categoryId] = []
     }
-    acc[service.category].push(service)
+    acc[categoryId].push(service)
     return acc
   }, {} as Record<string, typeof services>)
 
@@ -43,18 +56,23 @@ export default async function PricingPage() {
         </div>
 
         <div className="space-y-12">
-          {SERVICE_CATEGORIES.map((category) => {
+          {(categories || []).map((category) => {
             const categoryServices = servicesByCategory?.[category.id] || []
-            
+
             if (categoryServices.length === 0) return null
 
             return (
-              <div key={category.id} id={category.id}>
+              <div key={category.id} id={category.slug}>
                 <div className="flex items-center gap-3 mb-6">
-                  <span className="text-4xl">{category.icon}</span>
-                  <h2 className="text-2xl">{category.name}</h2>
+                  <span className="text-4xl">{category.icon || '✂️'}</span>
+                  <div>
+                    <h2 className="text-2xl font-bold">{category.name}</h2>
+                    {category.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
+                    )}
+                  </div>
                 </div>
-                
+
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {categoryServices.map((service: any) => (
                     <Card key={service.id} className="hover:shadow-md transition-shadow">
