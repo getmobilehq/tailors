@@ -76,10 +76,7 @@ ALTER DATABASE postgres SET app.settings.app_url TO 'https://tailorspace.uk';
 ## Email Configuration (Resend)
 
 ### From Addresses
-- **Orders**: orders@tailorspace.uk
-- **Support**: support@tailorspace.uk
-- **Legal**: legal@tailorspace.uk
-- **Privacy**: privacy@tailorspace.uk
+- **All emails**: support@tailorspace.uk
 
 ### Verified Domain
 Add `tailorspace.uk` in Resend Dashboard → Domains

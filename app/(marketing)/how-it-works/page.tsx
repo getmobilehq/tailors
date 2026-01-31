@@ -36,7 +36,6 @@ export default function HowItWorksPage() {
               description: 'Our trained runner arrives at your door to collect your items and take precise measurements.',
               details: [
                 'Runner arrives at your scheduled time',
-                'They inspect and photograph each item',
                 'Professional measurements taken on-site',
                 'Consultation on best alteration approach',
               ],
@@ -49,7 +48,7 @@ export default function HowItWorksPage() {
               details: [
                 'Work completed by experienced tailors',
                 'Quality checks at multiple stages',
-                'Typical turnaround: 5-7 working days',
+                'Typical turnaround: 2-7 working days',
                 'Updates sent via SMS/email',
               ],
             },

@@ -27,10 +27,7 @@ NODE_ENV=production
 
 ## 📧 Email Addresses
 
-- **Orders**: orders@tailorspace.uk
-- **Support**: support@tailorspace.uk
-- **Legal**: legal@tailorspace.uk
-- **Privacy**: privacy@tailorspace.uk
+- **All inquiries**: support@tailorspace.uk
 
 ---
 

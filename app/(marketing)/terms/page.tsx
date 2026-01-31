@@ -41,9 +41,6 @@ export default function TermsPage() {
                 <li>Professional alteration services</li>
                 <li>Delivery of completed alterations</li>
               </ul>
-              <p>
-                TailorSpace acts as an intermediary and is not responsible for the actual alteration work performed by tailors.
-              </p>
             </CardContent>
           </Card>
 
@@ -73,7 +70,7 @@ export default function TermsPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <ul>
-                <li>All prices are displayed in British Pounds (GBP) and are inclusive of VAT where applicable</li>
+                <li>All prices are displayed in British Pounds (GBP)</li>
                 <li>Payment is processed securely through Stripe</li>
                 <li>A flat delivery fee of £7.00 applies to all orders</li>
                 <li>Payment is required at the time of booking</li>

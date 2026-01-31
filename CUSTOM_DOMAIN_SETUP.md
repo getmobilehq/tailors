@@ -166,7 +166,7 @@ Since your domain is `tailorspace.uk`, you may want to:
 ### Update Email "From" Addresses:
 In `/lib/email.ts`, update:
 ```typescript
-from: 'TailorSpace <orders@tailorspace.uk>'
+from: 'TailorSpace <support@tailorspace.uk>'
 ```
 
 ### Set up Email DNS (SPF, DKIM, DMARC):
