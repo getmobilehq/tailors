@@ -5,7 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StatusBadge } from '@/components/orders/status-badge'
 import { formatPrice, formatDate } from '@/lib/utils'
 import Link from 'next/link'
-import { Scissors, TrendingUp, Clock, CheckCircle } from 'lucide-react'
+import { Scissors, DollarSign, Clock, CheckCircle, Star, Calendar } from 'lucide-react'
+
+// Tailor payout rate (58% of customer price)
+const TAILOR_PAYOUT_RATE = 0.58
+
+function calculateTailorPayout(orderTotal: number): number {
+  return orderTotal * TAILOR_PAYOUT_RATE
+}
 
 export default async function TailorDashboardPage() {
   const supabase = await createClient()
@@ -66,6 +73,27 @@ export default async function TailorDashboardPage() {
     .order('collected_at', { ascending: true })
     .limit(20)
 
+  // Get completed orders for earnings calculation
+  const { data: completedOrders } = await supabase
+    .from('orders')
+    .select('total, completed_at')
+    .eq('tailor_id', user.id)
+    .in('status', ['delivered', 'completed'])
+    .not('completed_at', 'is', null)
+
+  // Calculate earnings
+  const now = new Date()
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const weeklyEarnings = (completedOrders || [])
+    .filter(order => new Date(order.completed_at) >= weekAgo)
+    .reduce((sum, order) => sum + calculateTailorPayout(order.total), 0)
+
+  const monthlyEarnings = (completedOrders || [])
+    .filter(order => new Date(order.completed_at) >= monthAgo)
+    .reduce((sum, order) => sum + calculateTailorPayout(order.total), 0)
+
   // Calculate active items count
   const activeItemsCount = assignedOrders?.reduce((total, order) => {
     const activeItems = order.items?.filter((item: any) =>
@@ -76,37 +104,47 @@ export default async function TailorDashboardPage() {
 
   const stats = [
     {
+      title: 'This Week',
+      value: formatPrice(weeklyEarnings),
+      description: 'Your earnings',
+      icon: Calendar,
+      color: 'text-violet-600',
+      bg: 'bg-violet-100 dark:bg-violet-900/20',
+    },
+    {
+      title: 'This Month',
+      value: formatPrice(monthlyEarnings),
+      description: 'Your earnings',
+      icon: DollarSign,
+      color: 'text-violet-600',
+      bg: 'bg-violet-100 dark:bg-violet-900/20',
+    },
+    {
       title: 'Active Orders',
       value: assignedOrders?.length || 0,
+      description: `${activeItemsCount} items`,
       icon: Scissors,
-      color: 'text-blue-600',
-    },
-    {
-      title: 'Active Items',
-      value: activeItemsCount,
-      icon: Clock,
-      color: 'text-orange-600',
-    },
-    {
-      title: 'Completed Jobs',
-      value: tailorProfile?.completed_jobs || 0,
-      icon: CheckCircle,
-      color: 'text-green-600',
+      color: 'text-violet-600',
+      bg: 'bg-violet-100 dark:bg-violet-900/20',
     },
     {
       title: 'Rating',
       value: tailorProfile?.rating ? tailorProfile.rating.toFixed(1) : 'N/A',
-      icon: TrendingUp,
-      color: 'text-yellow-600',
+      description: `${tailorProfile?.completed_jobs || 0} jobs`,
+      icon: Star,
+      color: 'text-violet-600',
+      bg: 'bg-violet-100 dark:bg-violet-900/20',
     },
   ]
 
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Tailor Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          Tailor Dashboard
+        </h1>
         <p className="text-muted-foreground">
-          Manage your alterations and repairs
+          Manage your alterations and track your earnings
         </p>
       </div>
 
@@ -115,14 +153,17 @@ export default async function TailorDashboardPage() {
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
-            <Card key={stat.title}>
+            <Card key={stat.title} className="border-l-4 border-l-violet-500">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
                     <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
                   </div>
-                  <Icon className={`h-8 w-8 ${stat.color}`} />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.bg}`}>
+                    <Icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -197,8 +238,8 @@ export default async function TailorDashboardPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Total</p>
-                          <p className="text-lg font-bold">{formatPrice(order.total)}</p>
+                          <p className="text-sm text-muted-foreground">Your Payout</p>
+                          <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.total))}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -249,8 +290,8 @@ export default async function TailorDashboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Total</p>
-                      <p className="text-lg font-bold">{formatPrice(order.total)}</p>
+                      <p className="text-sm text-muted-foreground">Your Payout</p>
+                      <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.total))}</p>
                     </div>
                   </div>
                 </CardContent>
