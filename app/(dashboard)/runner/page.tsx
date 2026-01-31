@@ -1,11 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { StatusBadge } from '@/components/orders/status-badge'
-import { formatPrice, formatDate } from '@/lib/utils'
-import Link from 'next/link'
-import { Package, TrendingUp, Clock, CheckCircle } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { TaskList } from '@/components/runner/task-list'
+import { Package, Clock, CheckCircle, Star } from 'lucide-react'
 
 export default async function RunnerDashboardPage() {
   const supabase = await createClient()
@@ -32,7 +29,7 @@ export default async function RunnerDashboardPage() {
     .eq('user_id', user.id)
     .single()
 
-  // Get all orders assigned to this runner or available for pickup
+  // Get all orders assigned to this runner
   const { data: assignedOrders } = await supabase
     .from('orders')
     .select(`
@@ -41,7 +38,7 @@ export default async function RunnerDashboardPage() {
       items:order_items(id, garment_description)
     `)
     .eq('runner_id', user.id)
-    .in('status', ['pickup_scheduled', 'collected', 'out_for_delivery'])
+    .in('status', ['pickup_scheduled', 'collected', 'out_for_delivery', 'delivered'])
     .order('pickup_date', { ascending: true })
 
   // Get available orders (no runner assigned)
@@ -57,44 +54,86 @@ export default async function RunnerDashboardPage() {
     .order('pickup_date', { ascending: true })
     .limit(20)
 
-  // Get completed stats
-  const { data: completedOrders } = await supabase
-    .from('orders')
-    .select('id')
-    .eq('runner_id', user.id)
-    .in('status', ['delivered', 'completed'])
+  // Calculate priority based on time until pickup/delivery
+  function calculatePriority(pickupDate: string, orderStatus: string): 'urgent' | 'high' | 'normal' {
+    const now = new Date()
+    const pickup = new Date(pickupDate)
+    const hoursUntil = (pickup.getTime() - now.getTime()) / (1000 * 60 * 60)
+
+    if (hoursUntil < 2 || hoursUntil < 0) return 'urgent'
+    if (hoursUntil < 24) return 'high'
+    return 'normal'
+  }
+
+  // Transform orders to tasks
+  const allTasks = [
+    ...(assignedOrders || []).map(order => ({
+      id: order.id,
+      order_number: order.order_number,
+      type: (order.status === 'pickup_scheduled' ? 'pickup' : 'delivery') as 'pickup' | 'delivery',
+      customer_name: order.customer?.full_name || 'Unknown',
+      address: `${order.customer_address.line1}${order.customer_address.line2 ? ', ' + order.customer_address.line2 : ''}`,
+      postcode: order.customer_address.postcode,
+      item_count: order.items?.length || 0,
+      time_window: order.pickup_slot || 'Not scheduled',
+      pickup_date: order.pickup_date,
+      priority: calculatePriority(order.pickup_date, order.status),
+      status: (order.status === 'delivered' ? 'completed' : 'in_progress') as 'pending' | 'in_progress' | 'completed',
+      order_status: order.status,
+    })),
+    ...(availableOrders || []).map(order => ({
+      id: order.id,
+      order_number: order.order_number,
+      type: 'pickup' as 'pickup' | 'delivery',
+      customer_name: order.customer?.full_name || 'Unknown',
+      address: `${order.customer_address.line1}${order.customer_address.line2 ? ', ' + order.customer_address.line2 : ''}`,
+      postcode: order.customer_address.postcode,
+      item_count: order.items?.length || 0,
+      time_window: order.pickup_slot || 'Not scheduled',
+      pickup_date: order.pickup_date,
+      priority: calculatePriority(order.pickup_date, order.status),
+      status: 'pending' as 'pending' | 'in_progress' | 'completed',
+      order_status: order.status,
+    })),
+  ]
 
   const stats = [
     {
       title: 'Active Jobs',
-      value: assignedOrders?.length || 0,
+      value: assignedOrders?.filter(o => !['delivered', 'completed'].includes(o.status)).length || 0,
       icon: Package,
-      color: 'text-blue-600',
-    },
-    {
-      title: 'Completed',
-      value: runnerProfile?.completed_jobs || 0,
-      icon: CheckCircle,
-      color: 'text-green-600',
-    },
-    {
-      title: 'Rating',
-      value: runnerProfile?.rating ? runnerProfile.rating.toFixed(1) : 'N/A',
-      icon: TrendingUp,
-      color: 'text-yellow-600',
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-100 dark:bg-emerald-900/20',
     },
     {
       title: 'Available',
       value: availableOrders?.length || 0,
       icon: Clock,
-      color: 'text-purple-600',
+      color: 'text-blue-600',
+      bg: 'bg-blue-100 dark:bg-blue-900/20',
+    },
+    {
+      title: 'Completed',
+      value: runnerProfile?.completed_jobs || 0,
+      icon: CheckCircle,
+      color: 'text-gray-600',
+      bg: 'bg-gray-100 dark:bg-gray-900/20',
+    },
+    {
+      title: 'Rating',
+      value: runnerProfile?.rating ? runnerProfile.rating.toFixed(1) : 'N/A',
+      icon: Star,
+      color: 'text-yellow-600',
+      bg: 'bg-yellow-100 dark:bg-yellow-900/20',
     },
   ]
 
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Runner Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          Runner Dashboard
+        </h1>
         <p className="text-muted-foreground">
           Manage your pickups and deliveries
         </p>
@@ -105,14 +144,16 @@ export default async function RunnerDashboardPage() {
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
-            <Card key={stat.title}>
+            <Card key={stat.title} className="border-l-4 border-l-emerald-500">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
                     <p className="text-2xl font-bold">{stat.value}</p>
                   </div>
-                  <Icon className={`h-8 w-8 ${stat.color}`} />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.bg}`}>
+                    <Icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -120,122 +161,8 @@ export default async function RunnerDashboardPage() {
         })}
       </div>
 
-      {/* Orders Tabs */}
-      <Tabs defaultValue="assigned" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="assigned">
-            My Jobs ({assignedOrders?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="available">
-            Available ({availableOrders?.length || 0})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="assigned" className="space-y-4">
-          {!assignedOrders || assignedOrders.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No active jobs. Check available orders to accept new pickups.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            assignedOrders.map((order) => (
-              <Link key={order.id} href={`/runner/orders/${order.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg mb-1">
-                          {order.order_number}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          {order.customer?.full_name}
-                        </p>
-                      </div>
-                      <StatusBadge status={order.status} />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}
-                        </p>
-                        {order.pickup_date && (
-                          <p className="text-sm font-medium">
-                            {order.status === 'pickup_scheduled' ? 'Pickup: ' : 'Delivery: '}
-                            {formatDate(order.pickup_date)}
-                          </p>
-                        )}
-                        <p className="text-sm text-muted-foreground">
-                          {order.customer_address.postcode}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Total</p>
-                        <p className="text-lg font-bold">{formatPrice(order.total)}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          )}
-        </TabsContent>
-
-        <TabsContent value="available" className="space-y-4">
-          {!availableOrders || availableOrders.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">
-                <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No available orders at the moment.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            availableOrders.map((order) => (
-              <Link key={order.id} href={`/runner/orders/${order.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg mb-1">
-                          {order.order_number}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          {order.customer?.full_name}
-                        </p>
-                      </div>
-                      <StatusBadge status={order.status} />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}
-                        </p>
-                        {order.pickup_date && (
-                          <p className="text-sm font-medium">
-                            Pickup: {formatDate(order.pickup_date)}
-                          </p>
-                        )}
-                        <p className="text-sm text-muted-foreground">
-                          {order.customer_address.postcode}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Total</p>
-                        <p className="text-lg font-bold">{formatPrice(order.total)}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Task List with Filters */}
+      <TaskList tasks={allTasks} />
     </div>
   )
 }
