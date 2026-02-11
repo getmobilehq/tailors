@@ -90,7 +90,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [editFormData, setEditFormData] = useState({ full_name: '', email: '', phone: '', role: '' })
+  const [editFormData, setEditFormData] = useState<{ full_name: string; email: string; phone: string; role: User['role'] }>({ full_name: '', email: '', phone: '', role: 'customer' })
 
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -578,7 +578,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
               <Label htmlFor="edit-role">Role</Label>
               <Select
                 value={editFormData.role}
-                onValueChange={(value) => setEditFormData({ ...editFormData, role: value })}
+                onValueChange={(value) => setEditFormData({ ...editFormData, role: value as User['role'] })}
               >
                 <SelectTrigger id="edit-role">
                   <SelectValue />
