@@ -26,8 +26,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
-import { GripVertical, Edit, Trash2, Plus } from 'lucide-react'
+import { GripVertical, Edit, Trash2, Plus, ChevronDown, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatPrice } from '@/lib/utils'
 
 interface Category {
   id: string
@@ -40,6 +41,13 @@ interface Category {
   service_count: number
   created_at: string
   updated_at: string
+}
+
+interface Service {
+  id: string
+  name: string
+  base_price: number
+  active: boolean
 }
 
 interface CategoriesManagerProps {
@@ -59,6 +67,8 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
   })
   const [loading, setLoading] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [categoryServices, setCategoryServices] = useState<Record<string, Service[]>>({})
 
   // Open add dialog
   function handleAdd() {
@@ -210,6 +220,39 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
     }
   }
 
+  async function toggleCategoryExpand(categoryId: string) {
+    const isExpanded = expandedCategories.has(categoryId)
+
+    if (isExpanded) {
+      // Collapse
+      const newExpanded = new Set(expandedCategories)
+      newExpanded.delete(categoryId)
+      setExpandedCategories(newExpanded)
+    } else {
+      // Expand - fetch services if not already loaded
+      const newExpanded = new Set(expandedCategories)
+      newExpanded.add(categoryId)
+      setExpandedCategories(newExpanded)
+
+      if (!categoryServices[categoryId]) {
+        try {
+          const response = await fetch(`/api/admin/services`)
+          const data = await response.json()
+
+          if (response.ok) {
+            const filteredServices = data.services.filter((s: any) => s.category_id === categoryId)
+            setCategoryServices({
+              ...categoryServices,
+              [categoryId]: filteredServices
+            })
+          }
+        } catch (error) {
+          console.error('Failed to fetch services:', error)
+        }
+      }
+    }
+  }
+
   return (
     <>
       <Card>
@@ -223,54 +266,120 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
           </div>
 
           <div className="space-y-2">
-            {categories.map((category, index) => (
-              <div
-                key={category.id}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
-                className={`flex items-center gap-4 p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors cursor-move ${
-                  draggedIndex === index ? 'opacity-50' : ''
-                }`}
-              >
-                <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            {categories.map((category, index) => {
+              const isExpanded = expandedCategories.has(category.id)
+              const services = categoryServices[category.id] || []
 
-                <div className="text-2xl flex-shrink-0">{category.icon || '✂️'}</div>
+              return (
+                <div
+                  key={category.id}
+                  className="border rounded-lg overflow-hidden"
+                >
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={`flex items-center gap-4 p-4 bg-card hover:bg-accent/50 transition-colors cursor-move ${
+                      draggedIndex === index ? 'opacity-50' : ''
+                    }`}
+                  >
+                    <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold">{category.name}</h3>
-                    {!category.active && (
-                      <Badge variant="secondary">Inactive</Badge>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 flex-shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleCategoryExpand(category.id)
+                      }}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+
+                    <div className="text-2xl flex-shrink-0">{category.icon || '✂️'}</div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold">{category.name}</h3>
+                        {!category.active && (
+                          <Badge variant="secondary">Inactive</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {category.description || 'No description'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge variant="outline">{category.service_count} services</Badge>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEdit(category)
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteClick(category)
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {category.description || 'No description'}
-                  </p>
+
+                  {isExpanded && (
+                    <div className="px-4 py-3 bg-muted/30 border-t">
+                      {services.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic">
+                          No services in this category
+                        </p>
+                      ) : (
+                        <div className="grid gap-2">
+                          {services.map((service) => (
+                            <div
+                              key={service.id}
+                              className="flex items-center justify-between text-sm p-2 rounded bg-card"
+                            >
+                              <span className="font-medium">{service.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">
+                                  {formatPrice(service.base_price / 100)}
+                                </span>
+                                {service.active ? (
+                                  <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                    Active
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-xs">
+                                    Inactive
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Badge variant="outline">{category.service_count} services</Badge>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(category)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(category)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
 
             {categories.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">

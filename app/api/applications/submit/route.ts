@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     }
 
     // Create application
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('applications')
       .insert({
         email,
@@ -97,27 +97,30 @@ export async function POST(request: Request) {
         certifications: certifications || null,
         status: 'pending',
       })
-      .select()
-      .single()
 
     if (error) {
       console.error('Error creating application:', error)
       return NextResponse.json(
-        { error: 'Failed to submit application' },
+        {
+          error: 'Failed to submit application',
+          details: error
+        },
         { status: 500 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      application: data,
       message: 'Application submitted successfully'
     })
 
   } catch (error: any) {
     console.error('Application submission error:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      {
+        error: error.message || 'Internal server error',
+        details: error
+      },
       { status: 500 }
     )
   }
