@@ -21,13 +21,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { StatusBadge } from '@/components/orders/status-badge'
+import { OrderStatus } from '@/lib/types'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown } from 'lucide-react'
 
 interface Order {
   id: string
   order_number: string
-  status: string
+  status: OrderStatus
   created_at: string
   total: number
   pickup_date: string | null
