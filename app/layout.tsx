@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Inter, DM_Sans } from "next/font/google"
+import Script from "next/script"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { RecaptchaProvider } from "@/components/providers/recaptcha-provider"
@@ -85,6 +86,14 @@ export default function RootLayout({
           {children}
           <Toaster />
         </RecaptchaProvider>
+        <Script id="zoho-salesiq-init" strategy="lazyOnload">
+          {`window.$zoho=window.$zoho || {};$zoho.salesiq=$zoho.salesiq||{ready:function(){}}`}
+        </Script>
+        <Script
+          id="zsiqscript"
+          src="https://salesiq.zohopublic.eu/widget?wc=siqf72c9b9b7997dab2e076bfe193a5ce12832353ce230f41ecd80e81b3e88dc242"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   )
