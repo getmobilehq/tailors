@@ -87,7 +87,10 @@ export default function RootLayout({
           <Toaster />
         </RecaptchaProvider>
         <Script id="zoho-salesiq-init" strategy="lazyOnload">
-          {`window.$zoho=window.$zoho || {};$zoho.salesiq=$zoho.salesiq||{ready:function(){}}`}
+          {`window.$zoho=window.$zoho || {};$zoho.salesiq=$zoho.salesiq||{ready:function(){
+            $zoho.salesiq.floatbutton.color("#4F46E5");
+            $zoho.salesiq.floatbutton.text("Chat with TailorSpace");
+          }}`}
         </Script>
         <Script
           id="zsiqscript"
