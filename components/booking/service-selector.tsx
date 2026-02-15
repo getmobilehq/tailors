@@ -30,7 +30,7 @@ export function ServiceSelector({ services, categories }: ServiceSelectorProps) 
   const { items, addItem, removeItem, subtotal, total } = useCart()
   const [selectedCategory, setSelectedCategory] = useState<string>(categories[0]?.id || '')
 
-  const filteredServices = services.filter((s) => s.category === selectedCategory)
+  const filteredServices = services.filter((s) => (s as any).category_id === selectedCategory)
 
   function handleAddService(service: Service) {
     addItem(service)
