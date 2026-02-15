@@ -81,6 +81,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-HKL33SH9YP"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-HKL33SH9YP');`}
+        </Script>
+      </head>
       <body className={`${inter.variable} ${dmSans.variable} ${inter.className}`}>
         <RecaptchaProvider>
           {children}
