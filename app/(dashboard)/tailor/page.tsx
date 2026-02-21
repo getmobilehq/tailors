@@ -4,6 +4,15 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import { StatusBadge } from '@/components/orders/status-badge'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { TAILOR_PAYOUT_RATE } from '@/lib/constants'
@@ -321,49 +330,87 @@ export default async function TailorDashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            completedOrders.map((order) => (
-              <Link key={order.id} href={`/tailor/orders/${order.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg mb-1">
-                          {order.order_number}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          {order.customer?.full_name}
-                        </p>
-                      </div>
-                      <StatusBadge status={order.status} />
+            <>
+              {/* Earnings Summary */}
+              <Card className="border-l-4 border-l-violet-500">
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Orders</p>
+                      <p className="text-2xl font-bold">{completedOrders.length}</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}
-                        </p>
-                        <div className="text-xs text-muted-foreground">
-                          {order.items?.map((item: any, i: number) => (
-                            <span key={item.id}>
-                              {item.service?.name}
-                              {i < order.items.length - 1 ? ', ' : ''}
-                            </span>
-                          ))}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {order.completed_at ? `Completed ${formatDate(order.completed_at)}` : `Updated ${formatDate(order.updated_at)}`}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Earned</p>
-                        <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.subtotal))}</p>
-                      </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Earned</p>
+                      <p className="text-2xl font-bold text-violet-600">
+                        {formatPrice(completedOrders.reduce((sum, o) => sum + calculateTailorPayout(o.subtotal), 0))}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
+                    <div>
+                      <p className="text-sm text-muted-foreground">Avg per Order</p>
+                      <p className="text-2xl font-bold">
+                        {formatPrice(completedOrders.reduce((sum, o) => sum + calculateTailorPayout(o.subtotal), 0) / completedOrders.length)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Earnings Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <History className="h-5 w-5" />
+                    Earnings History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Services</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Subtotal</TableHead>
+                          <TableHead className="text-right">Your Earnings</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {completedOrders.map((order) => (
+                          <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
+                            <TableCell>
+                              <Link href={`/tailor/orders/${order.id}`} className="font-medium text-primary hover:underline">
+                                {order.order_number}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {order.customer?.full_name}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
+                              {order.items?.map((item: any) => item.service?.name).join(', ')}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
+                              {order.completed_at ? formatDate(order.completed_at) : formatDate(order.updated_at)}
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge status={order.status} />
+                            </TableCell>
+                            <TableCell className="text-right text-muted-foreground">
+                              {formatPrice(order.subtotal)}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold text-violet-600">
+                              {formatPrice(calculateTailorPayout(order.subtotal))}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
           )}
         </TabsContent>
       </Tabs>
