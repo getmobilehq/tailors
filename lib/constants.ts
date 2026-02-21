@@ -5,6 +5,9 @@ export const CURRENCY_SYMBOL = '£'
 // Tailor payout: 60% of subtotal (services only, excludes delivery fee)
 export const TAILOR_PAYOUT_RATE = 0.60
 
+// Runner payout: flat fee per completed job (from the delivery fee)
+export const RUNNER_FEE_PER_JOB = 5.00
+
 /**
  * @deprecated Use database categories instead
  * Fetch from: supabase.from('categories').select('*').eq('active', true).order('sort_order')

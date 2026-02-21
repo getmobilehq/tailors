@@ -1,8 +1,23 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { StatusBadge } from '@/components/orders/status-badge'
 import { TaskList } from '@/components/runner/task-list'
-import { Package, Clock, CheckCircle, Star } from 'lucide-react'
+import { formatPrice, formatDate } from '@/lib/utils'
+import { RUNNER_FEE_PER_JOB } from '@/lib/constants'
+import Link from 'next/link'
+import { Package, Clock, CheckCircle, Star, DollarSign, History } from 'lucide-react'
 
 export default async function RunnerDashboardPage() {
   const supabase = await createClient()
@@ -53,6 +68,34 @@ export default async function RunnerDashboardPage() {
     .eq('status', 'booked')
     .order('pickup_date', { ascending: true })
     .limit(20)
+
+  // Get completed orders for history
+  const { data: completedOrders } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      customer:customer_id(full_name),
+      items:order_items(
+        id,
+        service:services(name)
+      )
+    `)
+    .eq('runner_id', user.id)
+    .in('status', ['completed'])
+    .order('completed_at', { ascending: false })
+
+  // Calculate earnings
+  const now = new Date()
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const weeklyEarnings = (completedOrders || [])
+    .filter(order => order.completed_at && new Date(order.completed_at) >= weekAgo)
+    .length * RUNNER_FEE_PER_JOB
+
+  const monthlyEarnings = (completedOrders || [])
+    .filter(order => order.completed_at && new Date(order.completed_at) >= monthAgo)
+    .length * RUNNER_FEE_PER_JOB
 
   // Calculate priority based on time until pickup/delivery
   function calculatePriority(pickupDate: string, orderStatus: string): 'urgent' | 'high' | 'normal' {
@@ -106,11 +149,12 @@ export default async function RunnerDashboardPage() {
       bg: 'bg-emerald-100 dark:bg-emerald-900/20',
     },
     {
-      title: 'Available',
-      value: availableOrders?.length || 0,
-      icon: Clock,
-      color: 'text-blue-600',
-      bg: 'bg-blue-100 dark:bg-blue-900/20',
+      title: 'This Week',
+      value: formatPrice(weeklyEarnings),
+      description: 'Your earnings',
+      icon: DollarSign,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-100 dark:bg-emerald-900/20',
     },
     {
       title: 'Completed',
@@ -127,6 +171,8 @@ export default async function RunnerDashboardPage() {
       bg: 'bg-yellow-100 dark:bg-yellow-900/20',
     },
   ]
+
+  const totalEarnings = (completedOrders?.length || 0) * RUNNER_FEE_PER_JOB
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -150,6 +196,9 @@ export default async function RunnerDashboardPage() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
                     <p className="text-2xl font-bold">{stat.value}</p>
+                    {stat.description && (
+                      <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                    )}
                   </div>
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.bg}`}>
                     <Icon className={`h-6 w-6 ${stat.color}`} />
@@ -161,8 +210,110 @@ export default async function RunnerDashboardPage() {
         })}
       </div>
 
-      {/* Task List with Filters */}
-      <TaskList tasks={allTasks} />
+      {/* Tabs */}
+      <Tabs defaultValue="tasks" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="tasks">
+            Tasks ({allTasks.length})
+          </TabsTrigger>
+          <TabsTrigger value="history">
+            History ({completedOrders?.length || 0})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tasks">
+          <TaskList tasks={allTasks} />
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4">
+          {!completedOrders || completedOrders.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center text-muted-foreground">
+                <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No completed jobs yet.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Earnings Summary */}
+              <Card className="border-l-4 border-l-emerald-500">
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Jobs</p>
+                      <p className="text-2xl font-bold">{completedOrders.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Earned</p>
+                      <p className="text-2xl font-bold text-emerald-600">
+                        {formatPrice(totalEarnings)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Per Job</p>
+                      <p className="text-2xl font-bold">
+                        {formatPrice(RUNNER_FEE_PER_JOB)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Earnings Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <History className="h-5 w-5" />
+                    Earnings History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Services</TableHead>
+                          <TableHead>Completed</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Earned</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {completedOrders.map((order) => (
+                          <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
+                            <TableCell>
+                              <Link href={`/runner/orders/${order.id}`} className="font-medium text-primary hover:underline">
+                                {order.order_number}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {order.customer?.full_name}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
+                              {order.items?.map((item: any) => item.service?.name).join(', ')}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
+                              {order.completed_at ? formatDate(order.completed_at) : formatDate(order.updated_at)}
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge status={order.status} />
+                            </TableCell>
+                            <TableCell className="text-right font-semibold text-emerald-600">
+                              {formatPrice(RUNNER_FEE_PER_JOB)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
