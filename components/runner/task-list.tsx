@@ -11,9 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Package, TruckIcon, MapPin, Clock, Calendar } from 'lucide-react'
+import { Package, TruckIcon, MapPin, Clock, Calendar, DollarSign } from 'lucide-react'
 import Link from 'next/link'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatPrice } from '@/lib/utils'
+import { RUNNER_FEE_PER_JOB } from '@/lib/constants'
 
 type TaskType = 'pickup' | 'delivery'
 type Priority = 'urgent' | 'high' | 'normal'
@@ -232,6 +233,10 @@ export function TaskList({ tasks }: TaskListProps) {
                           <p className="text-sm">{task.distance.toFixed(1)} miles away</p>
                         </div>
                       )}
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm font-semibold text-emerald-600">{formatPrice(RUNNER_FEE_PER_JOB)}</p>
+                      </div>
                     </div>
                   </div>
 

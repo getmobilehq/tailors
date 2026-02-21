@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,7 +12,7 @@ import { OrderItemPhotos } from '@/components/orders/order-item-photos'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { ArrowLeft, MapPin, Calendar, Phone, User } from 'lucide-react'
 import Link from 'next/link'
-import { PICKUP_SLOTS } from '@/lib/constants'
+import { PICKUP_SLOTS, RUNNER_FEE_PER_JOB } from '@/lib/constants'
 
 export default async function RunnerOrderPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -251,17 +253,25 @@ export default async function RunnerOrderPage({ params }: { params: { id: string
             {/* Messages */}
             <OrderMessages orderId={order.id} currentUserId={user!.id} />
 
-            {/* Order Total */}
+            {/* Your Earnings */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Order Total</CardTitle>
+                <CardTitle className="text-lg">Your Earnings</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">
-                    {formatPrice(order.total)}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">Already paid</p>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Order total (paid by customer)</span>
+                  <span>{formatPrice(order.total)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Runner fee per job</span>
+                  <span className="font-medium text-emerald-600">{formatPrice(RUNNER_FEE_PER_JOB)}</span>
+                </div>
+                <div className="border-t pt-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">You earn</span>
+                    <span className="text-xl font-bold text-emerald-600">{formatPrice(RUNNER_FEE_PER_JOB)}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>

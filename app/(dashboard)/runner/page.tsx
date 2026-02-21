@@ -53,7 +53,7 @@ export default async function RunnerDashboardPage() {
       items:order_items(id, garment_description)
     `)
     .eq('runner_id', user.id)
-    .in('status', ['pickup_scheduled', 'collected', 'out_for_delivery', 'delivered'])
+    .in('status', ['pickup_scheduled', 'collected', 'out_for_delivery'])
     .order('pickup_date', { ascending: true })
 
   // Get available orders (no runner assigned)
@@ -81,8 +81,8 @@ export default async function RunnerDashboardPage() {
       )
     `)
     .eq('runner_id', user.id)
-    .in('status', ['completed'])
-    .order('completed_at', { ascending: false })
+    .in('status', ['delivered', 'completed'])
+    .order('updated_at', { ascending: false })
 
   // Calculate earnings
   const now = new Date()
