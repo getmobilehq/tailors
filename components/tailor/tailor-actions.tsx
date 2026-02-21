@@ -56,11 +56,18 @@ export function TailorActions({ order }: TailorActionsProps) {
 
       // Check if all items are done, then update order status to 'ready'
       const allDone = order.items?.every((item: any) => itemStatuses[item.id] === 'done')
+      const anyInProgress = order.items?.some((item: any) => itemStatuses[item.id] === 'in_progress')
 
       if (allDone && order.status !== 'ready') {
         await supabase
           .from('orders')
           .update({ status: 'ready' })
+          .eq('id', order.id)
+      } else if (anyInProgress && order.status === 'collected') {
+        // Auto-transition order to in_progress when tailor starts working
+        await supabase
+          .from('orders')
+          .update({ status: 'in_progress' })
           .eq('id', order.id)
       }
 

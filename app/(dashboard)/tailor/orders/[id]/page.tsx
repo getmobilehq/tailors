@@ -11,7 +11,7 @@ import { OrderMessages } from '@/components/orders/order-messages'
 import { OrderItemPhotos } from '@/components/orders/order-item-photos'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { TAILOR_PAYOUT_RATE } from '@/lib/constants'
-import { ArrowLeft, User, Calendar } from 'lucide-react'
+import { ArrowLeft, User, Calendar, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function TailorOrderPage({ params }: { params: { id: string } }) {
@@ -58,6 +58,7 @@ export default async function TailorOrderPage({ params }: { params: { id: string
     .order('created_at', { ascending: true })
 
   const isAssigned = order.tailor_id === user.id
+  const canAccept = !order.tailor_id && order.status === 'collected'
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -170,6 +171,27 @@ export default async function TailorOrderPage({ params }: { params: { id: string
             {/* Tailor Actions */}
             {isAssigned && (
               <TailorActions order={order} />
+            )}
+
+            {/* Accept Order */}
+            {canAccept && (
+              <Card className="border-violet-200 bg-violet-50/50 dark:bg-violet-900/10">
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <CheckCircle className="h-10 w-10 mx-auto mb-3 text-violet-500" />
+                    <h3 className="font-semibold text-lg mb-1">Accept This Order</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      This order is available for you to work on. Accept it to get started.
+                    </p>
+                    <form action="/api/tailor/accept" method="POST">
+                      <input type="hidden" name="order_id" value={order.id} />
+                      <Button type="submit" size="lg">
+                        Accept Order
+                      </Button>
+                    </form>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
 

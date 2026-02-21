@@ -13,11 +13,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/orders/status-badge'
+import { TailorOrderList } from '@/components/tailor/tailor-order-list'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { TAILOR_PAYOUT_RATE } from '@/lib/constants'
 import Link from 'next/link'
-import { Scissors, DollarSign, Clock, CheckCircle, Star, Calendar, History } from 'lucide-react'
+import { Scissors, DollarSign, Clock, CheckCircle, Star, Calendar, History, Settings } from 'lucide-react'
 
 function calculateTailorPayout(subtotal: number): number {
   return subtotal * TAILOR_PAYOUT_RATE
@@ -157,13 +159,20 @@ export default async function TailorDashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-          Tailor Dashboard
-        </h1>
-        <p className="text-muted-foreground">
-          Manage your alterations and track your earnings
-        </p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+            Tailor Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your alterations and track your earnings
+          </p>
+        </div>
+        <Button variant="outline" size="icon" asChild>
+          <Link href="/tailor/settings">
+            <Settings className="h-5 w-5" />
+          </Link>
+        </Button>
       </div>
 
       {/* Stats */}
@@ -203,72 +212,8 @@ export default async function TailorDashboardPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assigned" className="space-y-4">
-          {!assignedOrders || assignedOrders.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">
-                <Scissors className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No active orders. Check available orders to start working.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            assignedOrders.map((order) => {
-              const pendingItems = order.items?.filter((item: any) => item.status === 'pending').length || 0
-              const inProgressItems = order.items?.filter((item: any) => item.status === 'in_progress').length || 0
-              const doneItems = order.items?.filter((item: any) => item.status === 'done').length || 0
-              const totalItems = order.items?.length || 0
-
-              return (
-                <Link key={order.id} href={`/tailor/orders/${order.id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg mb-1">
-                            {order.order_number}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            {order.customer?.full_name}
-                          </p>
-                        </div>
-                        <StatusBadge status={order.status} />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {totalItems} item{totalItems !== 1 ? 's' : ''}
-                          </p>
-                          <div className="flex gap-4 text-xs">
-                            {pendingItems > 0 && (
-                              <span className="text-gray-600">
-                                {pendingItems} pending
-                              </span>
-                            )}
-                            {inProgressItems > 0 && (
-                              <span className="text-orange-600">
-                                {inProgressItems} in progress
-                              </span>
-                            )}
-                            {doneItems > 0 && (
-                              <span className="text-green-600">
-                                {doneItems} done
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Your Payout</p>
-                          <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.subtotal))}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              )
-            })
-          )}
+        <TabsContent value="assigned">
+          <TailorOrderList orders={assignedOrders || []} />
         </TabsContent>
 
         <TabsContent value="available" className="space-y-4">
@@ -310,9 +255,17 @@ export default async function TailorDashboardPage() {
                         ))}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Your Payout</p>
-                      <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.subtotal))}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Your Payout</p>
+                        <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.subtotal))}</p>
+                      </div>
+                      <form action="/api/tailor/accept" method="POST">
+                        <input type="hidden" name="order_id" value={order.id} />
+                        <Button type="submit" size="sm">
+                          Accept
+                        </Button>
+                      </form>
                     </div>
                   </div>
                 </CardContent>
