@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { formatDate } from '@/lib/utils'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   ChevronLeft,
   ChevronRight,
@@ -54,6 +55,8 @@ import {
   Scissors,
   Truck,
   ExternalLink,
+  Edit,
+  Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -100,6 +103,40 @@ const TYPE_COLORS = {
   tailor: 'tailor',
 } as const
 
+const SPECIALIZATION_OPTIONS = [
+  'Trousers & Jeans',
+  'Shirts & Blouses',
+  'Dresses & Skirts',
+  'Suits & Formal Wear',
+  'Coats & Jackets',
+  'Wedding Dresses',
+  'Leather Goods',
+  'Denim Repair',
+  'Tailoring',
+  'Embroidery',
+]
+
+const AVAILABILITY_OPTIONS = [
+  { value: 'full-time', label: 'Full-time' },
+  { value: 'part-time', label: 'Part-time' },
+  { value: 'weekends', label: 'Weekends only' },
+  { value: 'flexible', label: 'Flexible' },
+]
+
+interface EditFormData {
+  full_name: string
+  email: string
+  phone: string
+  bio: string
+  experience_years: number | null
+  availability: string
+  postcode_coverage: string
+  has_vehicle: boolean
+  specializations: string[]
+  certifications: string
+  portfolio_urls: string
+}
+
 export function ApplicationsTable({ applications: initialApplications }: ApplicationsTableProps) {
   const router = useRouter()
   const [applications, setApplications] = useState(initialApplications)
@@ -123,6 +160,19 @@ export function ApplicationsTable({ applications: initialApplications }: Applica
   // Approve confirmation
   const [approveDialogOpen, setApproveDialogOpen] = useState(false)
   const [approvingApplication, setApprovingApplication] = useState<Application | null>(null)
+
+  // Edit dialog
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingApplication, setEditingApplication] = useState<Application | null>(null)
+  const [editFormData, setEditFormData] = useState<EditFormData>({
+    full_name: '', email: '', phone: '', bio: '', experience_years: null,
+    availability: '', postcode_coverage: '', has_vehicle: false,
+    specializations: [], certifications: '', portfolio_urls: '',
+  })
+
+  // Delete dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingApplication, setDeletingApplication] = useState<Application | null>(null)
 
   // Loading states
   const [actionLoading, setActionLoading] = useState(false)
@@ -218,6 +268,114 @@ export function ApplicationsTable({ applications: initialApplications }: Applica
     setRejectingApplication(app)
     setRejectionReason('')
     setRejectDialogOpen(true)
+  }
+
+  function handleEditClick(app: Application) {
+    setEditingApplication(app)
+    setEditFormData({
+      full_name: app.full_name,
+      email: app.email,
+      phone: app.phone || '',
+      bio: app.bio || '',
+      experience_years: app.experience_years,
+      availability: app.availability || '',
+      postcode_coverage: app.postcode_coverage?.join(', ') || '',
+      has_vehicle: app.has_vehicle || false,
+      specializations: app.specializations || [],
+      certifications: app.certifications?.join('\n') || '',
+      portfolio_urls: app.portfolio_urls?.join('\n') || '',
+    })
+    setEditDialogOpen(true)
+  }
+
+  function toggleSpecialization(spec: string) {
+    setEditFormData(prev => ({
+      ...prev,
+      specializations: prev.specializations.includes(spec)
+        ? prev.specializations.filter(s => s !== spec)
+        : [...prev.specializations, spec],
+    }))
+  }
+
+  async function handleSaveEdit() {
+    if (!editingApplication) return
+    setActionLoading(true)
+
+    try {
+      const payload: Record<string, any> = {
+        full_name: editFormData.full_name,
+        email: editFormData.email,
+        phone: editFormData.phone,
+        bio: editFormData.bio || null,
+        experience_years: editFormData.experience_years,
+        availability: editFormData.availability || null,
+      }
+
+      if (editingApplication.application_type === 'runner') {
+        payload.postcode_coverage = editFormData.postcode_coverage
+          ? editFormData.postcode_coverage.split(',').map(s => s.trim()).filter(Boolean)
+          : []
+        payload.has_vehicle = editFormData.has_vehicle
+      } else {
+        payload.specializations = editFormData.specializations
+        payload.certifications = editFormData.certifications
+          ? editFormData.certifications.split('\n').map(s => s.trim()).filter(Boolean)
+          : []
+        payload.portfolio_urls = editFormData.portfolio_urls
+          ? editFormData.portfolio_urls.split('\n').map(s => s.trim()).filter(Boolean)
+          : []
+      }
+
+      const response = await fetch(`/api/admin/applications/${editingApplication.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to update application')
+
+      setApplications(applications.map(a =>
+        a.id === editingApplication.id ? { ...a, ...data } : a
+      ))
+      toast.success('Application updated successfully')
+      setEditDialogOpen(false)
+      router.refresh()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update application')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  function handleDeleteClick(app: Application) {
+    setDeletingApplication(app)
+    setDeleteDialogOpen(true)
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingApplication) return
+    setActionLoading(true)
+
+    try {
+      const response = await fetch(`/api/admin/applications/${deletingApplication.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to delete application')
+      }
+
+      setApplications(applications.filter(a => a.id !== deletingApplication.id))
+      toast.success(`${deletingApplication.full_name}'s application deleted.`)
+      setDeleteDialogOpen(false)
+      router.refresh()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete application')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   async function handleConfirmApprove() {
@@ -441,6 +599,9 @@ export function ApplicationsTable({ applications: initialApplications }: Applica
                             <Button variant="ghost" size="sm" onClick={() => handleViewClick(app)} title="View details">
                               <Eye className="h-4 w-4" />
                             </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleEditClick(app)} title="Edit">
+                              <Edit className="h-4 w-4" />
+                            </Button>
                             {app.status === 'pending' && (
                               <>
                                 <Button
@@ -461,6 +622,9 @@ export function ApplicationsTable({ applications: initialApplications }: Applica
                                 </Button>
                               </>
                             )}
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(app)} title="Delete">
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -749,6 +913,196 @@ export function ApplicationsTable({ applications: initialApplications }: Applica
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Application Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Application</DialogTitle>
+            <DialogDescription>
+              Update {editingApplication?.full_name}'s {editingApplication?.application_type} application details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-full-name">Full Name</Label>
+                <Input
+                  id="edit-full-name"
+                  value={editFormData.full_name}
+                  onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
+                  disabled={actionLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  disabled={actionLoading}
+                />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  value={editFormData.phone}
+                  onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                  disabled={actionLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-experience">Experience (years)</Label>
+                <Input
+                  id="edit-experience"
+                  type="number"
+                  min={0}
+                  value={editFormData.experience_years ?? ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, experience_years: e.target.value ? Number(e.target.value) : null })}
+                  disabled={actionLoading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-availability">Availability</Label>
+              <Select
+                value={editFormData.availability}
+                onValueChange={(value) => setEditFormData({ ...editFormData, availability: value })}
+              >
+                <SelectTrigger id="edit-availability">
+                  <SelectValue placeholder="Select availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AVAILABILITY_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-bio">Bio</Label>
+              <Textarea
+                id="edit-bio"
+                value={editFormData.bio}
+                onChange={(e) => setEditFormData({ ...editFormData, bio: e.target.value })}
+                rows={3}
+                disabled={actionLoading}
+              />
+            </div>
+
+            {/* Runner-specific fields */}
+            {editingApplication?.application_type === 'runner' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-postcode">Postcode Coverage (comma-separated)</Label>
+                  <Input
+                    id="edit-postcode"
+                    placeholder="NG1, NG2, NG3..."
+                    value={editFormData.postcode_coverage}
+                    onChange={(e) => setEditFormData({ ...editFormData, postcode_coverage: e.target.value })}
+                    disabled={actionLoading}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-vehicle"
+                    checked={editFormData.has_vehicle}
+                    onCheckedChange={(checked) => setEditFormData({ ...editFormData, has_vehicle: checked === true })}
+                    disabled={actionLoading}
+                  />
+                  <Label htmlFor="edit-vehicle">Has Vehicle</Label>
+                </div>
+              </>
+            )}
+
+            {/* Tailor-specific fields */}
+            {editingApplication?.application_type === 'tailor' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Specializations</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {SPECIALIZATION_OPTIONS.map(spec => (
+                      <button
+                        key={spec}
+                        type="button"
+                        onClick={() => toggleSpecialization(spec)}
+                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors text-left ${
+                          editFormData.specializations.includes(spec)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted hover:bg-muted/80'
+                        }`}
+                        disabled={actionLoading}
+                      >
+                        {spec}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-certifications">Certifications (one per line)</Label>
+                  <Textarea
+                    id="edit-certifications"
+                    placeholder="Enter certifications, one per line..."
+                    value={editFormData.certifications}
+                    onChange={(e) => setEditFormData({ ...editFormData, certifications: e.target.value })}
+                    rows={3}
+                    disabled={actionLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-portfolio">Portfolio URLs (one per line)</Label>
+                  <Textarea
+                    id="edit-portfolio"
+                    placeholder="Enter portfolio URLs, one per line..."
+                    value={editFormData.portfolio_urls}
+                    onChange={(e) => setEditFormData({ ...editFormData, portfolio_urls: e.target.value })}
+                    rows={3}
+                    disabled={actionLoading}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={actionLoading}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={actionLoading}>
+              {actionLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Application Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Application</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deletingApplication?.full_name}</strong>'s{' '}
+              {deletingApplication?.application_type} application? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={actionLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {actionLoading ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
