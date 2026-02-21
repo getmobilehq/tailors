@@ -12,12 +12,14 @@ import {
   Package2,
   Star,
   Briefcase,
-  BarChart3
+  BarChart3,
+  ClipboardList
 } from 'lucide-react'
 
 const adminNavItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/orders', label: 'Orders', icon: Package2 },
+  { href: '/admin/applications', label: 'Applications', icon: ClipboardList },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/services', label: 'Services', icon: Briefcase },
   { href: '/admin/content', label: 'Content', icon: FileText },
