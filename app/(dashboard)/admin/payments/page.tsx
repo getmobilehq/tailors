@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { PaymentsTable } from '@/components/admin/payments-table'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft, DollarSign } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AdminPaymentsPage() {
   const supabase = await createClient()
@@ -23,8 +26,11 @@ export default async function AdminPaymentsPage() {
     redirect('/orders')
   }
 
+  // Use admin client to bypass RLS (same pattern as applications page)
+  const adminClient = createAdminClient()
+
   // Fetch all payments with order and customer data
-  const { data: payments } = await supabase
+  const { data: payments } = await adminClient
     .from('payments')
     .select(`
       *,

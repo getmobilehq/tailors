@@ -45,6 +45,7 @@ import {
   CheckCircle,
   XCircle,
   RotateCcw,
+  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -111,6 +112,29 @@ export function PaymentsTable({ payments: initialPayments, stats }: PaymentsTabl
   const [refundAmount, setRefundAmount] = useState('')
   const [refundReason, setRefundReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [syncLoading, setSyncLoading] = useState(false)
+
+  async function handleSyncPayments() {
+    setSyncLoading(true)
+    try {
+      const response = await fetch('/api/admin/payments/sync', {
+        method: 'POST',
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to sync payments')
+
+      if (data.synced > 0) {
+        toast.success(`Synced ${data.synced} payment records from Stripe`)
+        router.refresh()
+      } else {
+        toast.info(data.message || 'All payments are already synced')
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sync payments')
+    } finally {
+      setSyncLoading(false)
+    }
+  }
 
   function handleSort(field: SortField) {
     if (sortField === field) {
@@ -224,7 +248,18 @@ export function PaymentsTable({ payments: initialPayments, stats }: PaymentsTabl
   return (
     <>
       <div className="space-y-4">
-        {/* Stats Cards */}
+        {/* Sync + Stats Cards */}
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncPayments}
+            disabled={syncLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncLoading ? 'animate-spin' : ''}`} />
+            {syncLoading ? 'Syncing...' : 'Sync from Stripe'}
+          </Button>
+        </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
