@@ -1,17 +1,17 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StatusBadge } from '@/components/orders/status-badge'
 import { formatPrice, formatDate } from '@/lib/utils'
+import { TAILOR_PAYOUT_RATE } from '@/lib/constants'
 import Link from 'next/link'
 import { Scissors, DollarSign, Clock, CheckCircle, Star, Calendar } from 'lucide-react'
 
-// Tailor payout rate (58% of customer price)
-const TAILOR_PAYOUT_RATE = 0.58
-
-function calculateTailorPayout(orderTotal: number): number {
-  return orderTotal * TAILOR_PAYOUT_RATE
+function calculateTailorPayout(subtotal: number): number {
+  return subtotal * TAILOR_PAYOUT_RATE
 }
 
 export default async function TailorDashboardPage() {
@@ -76,23 +76,23 @@ export default async function TailorDashboardPage() {
   // Get completed orders for earnings calculation
   const { data: completedOrders } = await supabase
     .from('orders')
-    .select('total, completed_at')
+    .select('subtotal, completed_at')
     .eq('tailor_id', user.id)
     .in('status', ['delivered', 'completed'])
     .not('completed_at', 'is', null)
 
-  // Calculate earnings
+  // Calculate earnings (60% of subtotal only, excludes delivery fee)
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1)
 
   const weeklyEarnings = (completedOrders || [])
     .filter(order => new Date(order.completed_at) >= weekAgo)
-    .reduce((sum, order) => sum + calculateTailorPayout(order.total), 0)
+    .reduce((sum, order) => sum + calculateTailorPayout(order.subtotal), 0)
 
   const monthlyEarnings = (completedOrders || [])
     .filter(order => new Date(order.completed_at) >= monthAgo)
-    .reduce((sum, order) => sum + calculateTailorPayout(order.total), 0)
+    .reduce((sum, order) => sum + calculateTailorPayout(order.subtotal), 0)
 
   // Calculate active items count
   const activeItemsCount = assignedOrders?.reduce((total, order) => {
@@ -239,7 +239,7 @@ export default async function TailorDashboardPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-muted-foreground">Your Payout</p>
-                          <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.total))}</p>
+                          <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.subtotal))}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -291,7 +291,7 @@ export default async function TailorDashboardPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Your Payout</p>
-                      <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.total))}</p>
+                      <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.subtotal))}</p>
                     </div>
                   </div>
                 </CardContent>

@@ -2,6 +2,9 @@ export const DELIVERY_FEE = 7.00
 export const CURRENCY = 'GBP'
 export const CURRENCY_SYMBOL = '£'
 
+// Tailor payout: 60% of subtotal (services only, excludes delivery fee)
+export const TAILOR_PAYOUT_RATE = 0.60
+
 /**
  * @deprecated Use database categories instead
  * Fetch from: supabase.from('categories').select('*').eq('active', true).order('sort_order')

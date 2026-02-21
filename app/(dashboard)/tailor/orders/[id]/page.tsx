@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,6 +10,7 @@ import { OrderTimeline } from '@/components/orders/order-timeline'
 import { OrderMessages } from '@/components/orders/order-messages'
 import { OrderItemPhotos } from '@/components/orders/order-item-photos'
 import { formatPrice, formatDate } from '@/lib/utils'
+import { TAILOR_PAYOUT_RATE } from '@/lib/constants'
 import { ArrowLeft, User, Calendar } from 'lucide-react'
 import Link from 'next/link'
 
@@ -243,17 +246,25 @@ export default async function TailorOrderPage({ params }: { params: { id: string
             {/* Messages */}
             <OrderMessages orderId={order.id} currentUserId={user!.id} />
 
-            {/* Order Total */}
+            {/* Your Payout */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Order Total</CardTitle>
+                <CardTitle className="text-lg">Your Payout</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">
-                    {formatPrice(order.total)}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">Paid by customer</p>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Service subtotal</span>
+                  <span>{formatPrice(order.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Your share ({Math.round(TAILOR_PAYOUT_RATE * 100)}%)</span>
+                  <span className="font-medium text-violet-600">{formatPrice(order.subtotal * TAILOR_PAYOUT_RATE)}</span>
+                </div>
+                <div className="border-t pt-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">You earn</span>
+                    <span className="text-xl font-bold text-violet-600">{formatPrice(order.subtotal * TAILOR_PAYOUT_RATE)}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
