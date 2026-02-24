@@ -188,3 +188,52 @@ export interface TimelineEntry {
   notes: string | null
   created_at: string
 }
+
+// Abandoned Cart Recovery Types
+
+export interface SavedCartItem {
+  service_id: string
+  service_name: string
+  service_price: number
+  garment_description: string
+  quantity: number
+  notes: string
+}
+
+export interface SavedCart {
+  id: string
+  user_id: string
+  items: SavedCartItem[]
+  pickup_date: string | null
+  pickup_slot: string | null
+  booking_step: 'services' | 'items' | 'schedule' | 'checkout'
+  last_active_at: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CartReminder {
+  id: string
+  user_id: string
+  order_id: string | null
+  saved_cart_id: string | null
+  reminder_type: 'cart_abandonment' | 'payment_abandonment'
+  sequence_number: 1 | 2 | 3
+  recovery_token: string
+  sent_at: string
+  clicked_at: string | null
+  recovered_at: string | null
+  created_at: string
+}
+
+export interface CartReminderEmailProps {
+  customerName: string
+  items: { serviceName: string; quantity: number; price: number }[]
+  subtotal: string
+  total: string
+  recoveryUrl: string
+  unsubscribeUrl: string
+  sequenceNumber: 1 | 2 | 3
+  reminderType: 'cart_abandonment' | 'payment_abandonment'
+  orderNumber?: string
+}

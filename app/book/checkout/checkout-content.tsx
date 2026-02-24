@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,15 +12,33 @@ import { useCart } from '@/hooks/use-cart'
 import { ArrowLeft, CreditCard, MapPin, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { formatDate } from '@/lib/utils'
-import { PICKUP_SLOTS } from '@/lib/constants'
+import { formatDate, formatPrice } from '@/lib/utils'
+import { PICKUP_SLOTS, DELIVERY_FEE } from '@/lib/constants'
 import type { SavedAddress } from '@/lib/types'
+
+interface RecoveryOrder {
+  id: string
+  order_number: string
+  subtotal: number
+  delivery_fee: number
+  total: number
+  customer_address: { line1: string; line2?: string; city: string; postcode: string }
+  customer_phone: string
+  customer_notes: string | null
+  pickup_date: string | null
+  pickup_slot: string | null
+  items?: { service: { name: string }; quantity: number; price: number }[]
+}
 
 export default function CheckoutContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const recoveryOrderId = searchParams.get('recover')
   const { items } = useCart()
   const [loading, setLoading] = useState(false)
   const [pickupInfo, setPickupInfo] = useState({ date: '', slot: '' })
+  const [recoveryOrder, setRecoveryOrder] = useState<RecoveryOrder | null>(null)
+  const [recoveryLoading, setRecoveryLoading] = useState(!!recoveryOrderId)
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [useNewAddress, setUseNewAddress] = useState(false)
@@ -35,7 +53,54 @@ export default function CheckoutContent() {
     notes: '',
   })
 
+  // Load recovery order if in recovery mode
   useEffect(() => {
+    if (!recoveryOrderId) return
+
+    async function loadRecoveryOrder() {
+      try {
+        const res = await fetch(`/api/orders/${recoveryOrderId}`)
+        if (!res.ok) {
+          toast.error('Could not load your order. It may have been cancelled.')
+          router.push('/book')
+          return
+        }
+        const data = await res.json()
+        const order = data.order || data
+
+        setRecoveryOrder(order)
+
+        // Pre-fill form from existing order
+        if (order.customer_address) {
+          setFormData({
+            line1: order.customer_address.line1 || '',
+            line2: order.customer_address.line2 || '',
+            city: order.customer_address.city || 'Nottingham',
+            postcode: order.customer_address.postcode || '',
+            phone: order.customer_phone || '',
+            notes: order.customer_notes || '',
+          })
+        }
+
+        if (order.pickup_date && order.pickup_slot) {
+          setPickupInfo({ date: order.pickup_date, slot: order.pickup_slot })
+        }
+      } catch (error) {
+        console.error('Failed to load recovery order:', error)
+        toast.error('Failed to load your order')
+        router.push('/book')
+      } finally {
+        setRecoveryLoading(false)
+      }
+    }
+
+    loadRecoveryOrder()
+  }, [recoveryOrderId, router])
+
+  useEffect(() => {
+    // Skip normal flow validation if in recovery mode
+    if (recoveryOrderId) return
+
     if (items.length === 0) {
       router.push('/book')
       return
@@ -65,7 +130,7 @@ export default function CheckoutContent() {
 
     // Fetch saved addresses
     fetchSavedAddresses()
-  }, [items, router])
+  }, [items, router, recoveryOrderId])
 
   async function fetchSavedAddresses() {
     try {
@@ -133,21 +198,48 @@ export default function CheckoutContent() {
   }
 
   async function handleCheckout() {
-    // Validate required fields
-    if (!formData.line1 || !formData.city || !formData.postcode || !formData.phone) {
-      toast.error('Please fill in all required fields')
-      return
-    }
+    // Validate required fields (skip for recovery mode where address is pre-filled)
+    if (!recoveryOrder) {
+      if (!formData.line1 || !formData.city || !formData.postcode || !formData.phone) {
+        toast.error('Please fill in all required fields')
+        return
+      }
 
-    // Validate Nottingham postcode
-    if (!formData.postcode.toUpperCase().startsWith('NG')) {
-      toast.error('We currently only serve Nottingham postcodes (NG)')
-      return
+      // Validate Nottingham postcode
+      if (!formData.postcode.toUpperCase().startsWith('NG')) {
+        toast.error('We currently only serve Nottingham postcodes (NG)')
+        return
+      }
     }
 
     setLoading(true)
 
     try {
+      // Recovery mode: skip order creation, go straight to Stripe
+      if (recoveryOrder) {
+        const checkoutResponse = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: recoveryOrder.id,
+            orderNumber: recoveryOrder.order_number,
+            total: recoveryOrder.total,
+          }),
+        })
+
+        const checkoutData = await checkoutResponse.json()
+
+        if (!checkoutResponse.ok) {
+          throw new Error(checkoutData.error || 'Checkout failed')
+        }
+
+        if (checkoutData.url) {
+          window.location.href = checkoutData.url
+        }
+        return
+      }
+
+      // Normal flow: Create order first
       // Step 1: Create order in database (with photos)
       const orderResponse = await fetch('/api/orders/create', {
         method: 'POST',
@@ -254,7 +346,18 @@ export default function CheckoutContent() {
     }
   }
 
-  if (!pickupInfo.date) {
+  if (recoveryLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your order...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!recoveryOrder && !pickupInfo.date) {
     return null
   }
 
@@ -473,7 +576,40 @@ export default function CheckoutContent() {
         </div>
 
         <div className="lg:sticky lg:top-4 h-fit space-y-4">
-          <CartSummary />
+          {recoveryOrder ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Order {recoveryOrder.order_number}
+                </p>
+                {recoveryOrder.items?.map((item, i) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span>{item.service?.name} x{item.quantity}</span>
+                    <span>{formatPrice(item.price)}</span>
+                  </div>
+                ))}
+                <div className="border-t pt-2 mt-2 space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(recoveryOrder.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Delivery</span>
+                    <span>{formatPrice(recoveryOrder.delivery_fee)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span>{formatPrice(recoveryOrder.total)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <CartSummary />
+          )}
           <Button
             onClick={handleCheckout}
             className="w-full gap-2"

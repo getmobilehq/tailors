@@ -103,6 +103,21 @@ export async function POST(req: NextRequest) {
         console.log(`Order confirmation email sent to ${order.customer.email}`)
       }
 
+      // Mark cart reminders as recovered (if this was an abandoned cart recovery)
+      await supabase
+        .from('cart_reminders')
+        .update({ recovered_at: new Date().toISOString() })
+        .eq('order_id', orderId)
+        .is('recovered_at', null)
+
+      // Clean up saved cart for this user
+      if (order?.customer_id) {
+        await supabase
+          .from('saved_carts')
+          .delete()
+          .eq('user_id', order.customer_id)
+      }
+
       console.log(`Order confirmed successfully: ${orderNumber}`)
     } catch (error: any) {
       console.error('Webhook processing error:', error)

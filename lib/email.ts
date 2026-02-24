@@ -2,6 +2,10 @@ import { Resend } from 'resend'
 import { render } from '@react-email/render'
 import OrderConfirmationEmail from '@/emails/order-confirmation'
 import OrderStatusUpdateEmail from '@/emails/order-status-update'
+import CartReminder1 from '@/emails/cart-reminder-1'
+import CartReminder2 from '@/emails/cart-reminder-2'
+import CartReminder3 from '@/emails/cart-reminder-3'
+import type { CartReminderEmailProps } from '@/lib/types'
 
 // Initialize Resend (will use RESEND_API_KEY from env)
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -252,6 +256,60 @@ export async function sendApplicationApprovalEmail(to: string, name: string, app
     return { success: true, data: result }
   } catch (error) {
     console.error('Failed to send application approval email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendCartReminder(data: {
+  to: string
+} & CartReminderEmailProps) {
+  try {
+    const templates = {
+      1: CartReminder1,
+      2: CartReminder2,
+      3: CartReminder3,
+    }
+
+    const Template = templates[data.sequenceNumber]
+    const emailHtml = await render(
+      Template({
+        customerName: data.customerName,
+        items: data.items,
+        subtotal: data.subtotal,
+        total: data.total,
+        recoveryUrl: data.recoveryUrl,
+        unsubscribeUrl: data.unsubscribeUrl,
+        sequenceNumber: data.sequenceNumber,
+        reminderType: data.reminderType,
+        orderNumber: data.orderNumber,
+      })
+    )
+
+    const isPayment = data.reminderType === 'payment_abandonment'
+    const subjects = {
+      1: isPayment
+        ? `Complete your order ${data.orderNumber}`
+        : 'Your TailorSpace cart is waiting',
+      2: isPayment
+        ? `Your order ${data.orderNumber} is still waiting`
+        : 'Still thinking about those alterations?',
+      3: isPayment
+        ? `Final reminder - ${data.orderNumber}`
+        : 'Last chance: your cart expires soon',
+    }
+
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.to,
+      replyTo: REPLY_TO,
+      subject: subjects[data.sequenceNumber],
+      html: emailHtml,
+    })
+
+    console.log(`Cart reminder #${data.sequenceNumber} email sent:`, result)
+    return { success: true, data: result }
+  } catch (error) {
+    console.error(`Failed to send cart reminder #${data.sequenceNumber} email:`, error)
     return { success: false, error }
   }
 }

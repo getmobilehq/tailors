@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { CartSyncProvider } from '@/components/providers/cart-sync-provider'
 
 export default function BookLayout({
   children,
@@ -11,7 +12,9 @@ export default function BookLayout({
       <Header />
 
       <main className="flex-1 container py-8">
-        {children}
+        <CartSyncProvider>
+          {children}
+        </CartSyncProvider>
       </main>
 
       <Footer />
