@@ -50,10 +50,10 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold mb-1">Phone</h3>
                   <a
-                    href="tel:+441159999999"
+                    href="tel:+447575065774"
                     className="text-muted-foreground hover:text-primary"
                   >
-                    0115 999 9999
+                    +44 7575 065774
                   </a>
                   <p className="text-sm text-muted-foreground mt-1">
                     Mon-Fri: 9am-6pm, Sat: 10am-4pm

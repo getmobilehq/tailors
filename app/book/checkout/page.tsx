@@ -1,10 +1,10 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
+import CheckoutContent from './checkout-content'
 
-const CheckoutContent = dynamic(() => import('./checkout-content'), {
-  ssr: false,
-  loading: () => (
+function CheckoutLoading() {
+  return (
     <div className="max-w-7xl mx-auto">
       <div className="h-screen flex items-center justify-center">
         <div className="text-center">
@@ -13,9 +13,13 @@ const CheckoutContent = dynamic(() => import('./checkout-content'), {
         </div>
       </div>
     </div>
-  ),
-})
+  )
+}
 
 export default function CheckoutPage() {
-  return <CheckoutContent />
+  return (
+    <Suspense fallback={<CheckoutLoading />}>
+      <CheckoutContent />
+    </Suspense>
+  )
 }
