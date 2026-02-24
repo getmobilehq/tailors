@@ -1,0 +1,24 @@
+Name,Description,Category,Base Price (£),Estimated Days,Popular
+Trouser Hemming,Professional hemming to your perfect length,Trousers & Jeans,14,5,Yes
+Trouser Waist Adjustment,Take in or let out waist up to 2 inches,Trousers & Jeans,18,5,Yes
+Trouser Tapering,Slim fit adjustment from knee down,Trousers & Jeans,22,7,No
+Zip Replacement (Trousers),Replace broken or damaged zip,Trousers & Jeans,16,5,No
+Shirt Sleeve Shortening,Adjust sleeve length to perfect fit,Shirts & Blouses,14,5,Yes
+Shirt Darting,Add darts for better fit through body,Shirts & Blouses,18,5,No
+Button Replacement,Replace missing or damaged buttons,Shirts & Blouses,8,3,No
+Shirt Collar Repair,Fix or replace worn collar,Shirts & Blouses,14,5,No
+Dress Hemming,Adjust dress length to your height,Dresses & Skirts,18,7,Yes
+Dress Taking In,Adjust fit through waist and bust,Dresses & Skirts,25,7,Yes
+Zip Replacement (Dress),Replace dress zip,Dresses & Skirts,18,5,No
+Dress Strap Adjustment,Shorten or replace dress straps,Dresses & Skirts,12,5,No
+Suit Jacket Sleeve Shortening,Professional sleeve adjustment,Suits & Formal,18,5,Yes
+Suit Jacket Taking In,Adjust fit through body,Suits & Formal,28,7,No
+Suit Trouser Package,Hem and waist adjustment,Suits & Formal,28,5,Yes
+Full Suit Alteration,Complete suit fitting service,Suits & Formal,55,10,No
+Coat Sleeve Shortening,Adjust coat sleeve length,Jackets & Coats,22,7,No
+Coat Hemming,Shorten coat length,Jackets & Coats,25,7,No
+Coat Lining Repair,Fix or replace coat lining,Jackets & Coats,35,10,No
+Coat Zip Replacement,Replace coat zip,Jackets & Coats,22,7,No
+Basic Repair,Small repairs and fixes,Other,12,5,No
+Patch Application,Apply decorative or repair patches,Other,15,5,No
+Custom Alteration,Bespoke alteration service - price quoted,Other,0,14,No
