@@ -41,3 +41,6 @@ next-env.d.ts
 
 # Netlify
 .netlify
+
+# Documentation
+DOCUMENTATION.md
