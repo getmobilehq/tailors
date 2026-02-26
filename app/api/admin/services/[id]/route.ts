@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 export async function PATCH(
@@ -36,13 +37,15 @@ export async function PATCH(
     if (estimated_days !== undefined) updateData.estimated_days = estimated_days
     if (active !== undefined) updateData.active = active
 
-    const { data: service, error } = await supabase
+    const adminDb = createAdminClient()
+
+    const { data: service, error } = await adminDb
       .from('services')
       .update(updateData)
       .eq('id', params.id)
       .select(`
         *,
-        category:categories!services_category_id_fkey(id, name, slug, icon)
+        category:categories(id, name, slug, icon)
       `)
       .single()
 
@@ -82,8 +85,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    const adminDb = createAdminClient()
+
     // Check if service is used in any orders
-    const { count } = await supabase
+    const { count } = await adminDb
       .from('order_items')
       .select('*', { count: 'exact', head: true })
       .eq('service_id', params.id)
@@ -96,7 +101,7 @@ export async function DELETE(
     }
 
     // Delete service
-    const { error } = await supabase
+    const { error } = await adminDb
       .from('services')
       .delete()
       .eq('id', params.id)

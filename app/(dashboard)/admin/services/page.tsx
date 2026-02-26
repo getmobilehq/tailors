@@ -53,7 +53,7 @@ export default async function AdminServicesPage() {
     .from('services')
     .select(`
       *,
-      category:categories!services_category_id_fkey(id, name, slug, icon)
+      category:categories(id, name, slug, icon)
     `)
     .order('sort_order', { ascending: true })
 

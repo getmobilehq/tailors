@@ -20,7 +20,7 @@ export default async function PricingPage() {
     .from('services')
     .select(`
       *,
-      category:categories!services_category_id_fkey(id, slug, name, icon)
+      category:categories(id, slug, name, icon)
     `)
     .eq('active', true)
     .order('sort_order')

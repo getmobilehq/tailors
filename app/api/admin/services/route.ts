@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -22,16 +23,21 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Fetch all services with category info
-    const { data: services, error } = await supabase
+    // Use admin client to bypass RLS for fetching services
+    const adminDb = createAdminClient()
+
+    const { data: services, error } = await adminDb
       .from('services')
       .select(`
         *,
-        category:categories!services_category_id_fkey(id, name, slug, icon)
+        category:categories(id, name, slug, icon)
       `)
       .order('sort_order', { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error fetching services:', error)
+      throw error
+    }
 
     return NextResponse.json({ services })
   } catch (error: any) {
@@ -74,8 +80,11 @@ export async function POST(request: Request) {
       )
     }
 
+    // Use admin client to bypass RLS for service operations
+    const adminDb = createAdminClient()
+
     // Get max sort_order
-    const { data: maxOrderData } = await supabase
+    const { data: maxOrderData } = await adminDb
       .from('services')
       .select('sort_order')
       .order('sort_order', { ascending: false })
@@ -85,7 +94,7 @@ export async function POST(request: Request) {
     const nextOrder = (maxOrderData?.sort_order || 0) + 1
 
     // Create service
-    const { data: service, error } = await supabase
+    const { data: service, error } = await adminDb
       .from('services')
       .insert({
         name,
@@ -98,11 +107,14 @@ export async function POST(request: Request) {
       })
       .select(`
         *,
-        category:categories!services_category_id_fkey(id, name, slug, icon)
+        category:categories(id, name, slug, icon)
       `)
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error creating service:', error)
+      throw error
+    }
 
     return NextResponse.json({ service })
   } catch (error: any) {
@@ -145,9 +157,12 @@ export async function PATCH(request: Request) {
       )
     }
 
+    // Use admin client to bypass RLS
+    const adminDb = createAdminClient()
+
     // Update sort_order for all services
     for (let i = 0; i < services.length; i++) {
-      await supabase
+      await adminDb
         .from('services')
         .update({ sort_order: i })
         .eq('id', services[i].id)
