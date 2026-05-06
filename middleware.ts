@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // Protected routes
-  const protectedPaths = ['/orders', '/runner', '/tailor', '/admin', '/settings']
+  const protectedPaths = ['/orders', '/runner', '/tailor', '/admin', '/settings', '/change-password']
   const isProtected = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
   if (isProtected && !user) {
@@ -70,11 +70,20 @@ export async function middleware(request: NextRequest) {
   if (user) {
     const { data: profile } = await supabase
       .from('users')
-      .select('role')
+      .select('role, must_change_password')
       .eq('id', user.id)
       .single()
 
     if (profile) {
+      // Force password change before anything else (admins included).
+      const onChangePassword = request.nextUrl.pathname.startsWith('/change-password')
+      if (profile.must_change_password && !onChangePassword) {
+        return NextResponse.redirect(new URL('/change-password', request.url))
+      }
+      if (!profile.must_change_password && onChangePassword) {
+        return NextResponse.redirect(new URL('/orders', request.url))
+      }
+
       if (request.nextUrl.pathname.startsWith('/admin') && profile.role !== 'admin') {
         return NextResponse.redirect(new URL('/orders', request.url))
       }

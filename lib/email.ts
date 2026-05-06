@@ -314,6 +314,48 @@ export async function sendCartReminder(data: {
   }
 }
 
+export async function sendAdminPasswordResetEmail(to: string, name: string, tempPassword: string) {
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      replyTo: REPLY_TO,
+      subject: 'Your TailorSpace password has been reset',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Your Password Was Reset</h1>
+          <p>Hi ${name},</p>
+          <p>A TailorSpace administrator has reset your password. Use the temporary password below to sign in. You will be asked to choose a new password as soon as you log in.</p>
+
+          <div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 8px 0;"><strong>Email:</strong> ${to}</p>
+            <p style="margin: 8px 0;"><strong>Temporary Password:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-size: 16px;">${tempPassword}</code></p>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="background-color: #000; color: #fff; padding: 12px 32px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Log In
+            </a>
+          </div>
+
+          <p>If you did not expect this change, please contact our support team immediately.</p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #999; font-size: 12px;">
+            This is an automated message from TailorSpace. Please do not reply to this email.
+          </p>
+        </div>
+      `,
+    })
+
+    console.log('Admin password reset email sent:', result)
+    return { success: true, data: result }
+  } catch (error) {
+    console.error('Failed to send admin password reset email:', error)
+    return { success: false, error }
+  }
+}
+
 export async function sendApplicationRejectionEmail(to: string, name: string, applicationType: 'runner' | 'tailor', reason: string) {
   const roleTitle = applicationType === 'runner' ? 'Runner' : 'Tailor'
 

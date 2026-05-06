@@ -39,8 +39,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { formatDate } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Ban, CheckCircle, Edit, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Ban, CheckCircle, Edit, Trash2, KeyRound, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -95,6 +96,14 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingUser, setDeletingUser] = useState<User | null>(null)
+
+  // Reset password dialog state
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
+  const [resetUser, setResetUser] = useState<User | null>(null)
+  const [resetSendEmail, setResetSendEmail] = useState(true)
+  const [resetSubmitting, setResetSubmitting] = useState(false)
+  const [resetResult, setResetResult] = useState<{ tempPassword: string; emailed: boolean; emailError: string | null } | null>(null)
+  const [resetCopied, setResetCopied] = useState(false)
 
   // Handle sorting
   function handleSort(field: SortField) {
@@ -261,6 +270,53 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
   function handleDeleteClick(user: User) {
     setDeletingUser(user)
     setDeleteDialogOpen(true)
+  }
+
+  // Open reset password dialog
+  function handleResetClick(user: User) {
+    setResetUser(user)
+    setResetSendEmail(true)
+    setResetResult(null)
+    setResetCopied(false)
+    setResetDialogOpen(true)
+  }
+
+  // Confirm reset password
+  async function handleConfirmReset() {
+    if (!resetUser) return
+    setResetSubmitting(true)
+    try {
+      const response = await fetch(`/api/admin/users/${resetUser.id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sendEmail: resetSendEmail }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to reset password')
+
+      setResetResult({
+        tempPassword: data.tempPassword,
+        emailed: !!data.emailed,
+        emailError: data.emailError ?? null,
+      })
+      toast.success('Temporary password generated')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reset password')
+    } finally {
+      setResetSubmitting(false)
+    }
+  }
+
+  async function handleCopyTempPassword() {
+    if (!resetResult) return
+    try {
+      await navigator.clipboard.writeText(resetResult.tempPassword)
+      setResetCopied(true)
+      setTimeout(() => setResetCopied(false), 2000)
+    } catch {
+      toast.error('Could not copy to clipboard')
+    }
   }
 
   // Confirm delete
@@ -477,13 +533,23 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEditClick(user)}
+                              title="Edit user"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => handleResetClick(user)}
+                              title="Reset password"
+                            >
+                              <KeyRound className="h-4 w-4 text-blue-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleToggleActive(user)}
+                              title={user.active ? 'Suspend user' : 'Activate user'}
                             >
                               {!user.active ? (
                                 <CheckCircle className="h-4 w-4 text-green-600" />
@@ -495,6 +561,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteClick(user)}
+                              title="Delete user"
                             >
                               <Trash2 className="h-4 w-4 text-red-600" />
                             </Button>
@@ -599,6 +666,86 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
             <Button onClick={handleSaveEdit}>
               Save Changes
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog
+        open={resetDialogOpen}
+        onOpenChange={(open) => {
+          setResetDialogOpen(open)
+          if (!open) {
+            setResetUser(null)
+            setResetResult(null)
+            setResetCopied(false)
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              {resetResult
+                ? 'Share this temporary password with the user. They will be required to change it on next login.'
+                : `Generate a temporary password for ${resetUser?.full_name ?? 'this user'}. They will be required to change it on next login.`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {!resetResult ? (
+            <div className="space-y-4 py-2">
+              <div className="rounded-md border p-3 text-sm">
+                <div><span className="text-muted-foreground">User:</span> {resetUser?.full_name}</div>
+                <div><span className="text-muted-foreground">Email:</span> {resetUser?.email}</div>
+                <div><span className="text-muted-foreground">Role:</span> {resetUser ? ROLE_LABELS[resetUser.role] : ''}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="reset-send-email"
+                  checked={resetSendEmail}
+                  onCheckedChange={(v) => setResetSendEmail(v === true)}
+                />
+                <Label htmlFor="reset-send-email" className="text-sm font-normal cursor-pointer">
+                  Email the temporary password to the user
+                </Label>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 py-2">
+              <Label className="text-xs text-muted-foreground">Temporary password</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 px-3 py-2 rounded-md border bg-muted font-mono text-sm tracking-wide select-all">
+                  {resetResult.tempPassword}
+                </code>
+                <Button type="button" variant="outline" size="sm" onClick={handleCopyTempPassword}>
+                  {resetCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+              {resetResult.emailed && (
+                <p className="text-sm text-green-600">Emailed to {resetUser?.email}.</p>
+              )}
+              {resetResult.emailError && (
+                <p className="text-sm text-orange-600">{resetResult.emailError}</p>
+              )}
+              {!resetResult.emailed && !resetResult.emailError && (
+                <p className="text-sm text-muted-foreground">Copy and share this securely. It will not be shown again.</p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            {!resetResult ? (
+              <>
+                <Button variant="outline" onClick={() => setResetDialogOpen(false)} disabled={resetSubmitting}>
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirmReset} disabled={resetSubmitting}>
+                  {resetSubmitting ? 'Resetting...' : 'Reset Password'}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => setResetDialogOpen(false)}>Done</Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
