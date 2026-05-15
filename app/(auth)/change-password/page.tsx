@@ -35,8 +35,10 @@ export default function ChangePasswordPage() {
         body: JSON.stringify({ newPassword }),
       })
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Failed to change password')
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(data.error || `Failed to change password (${response.status})`)
+      }
 
       toast.success('Password updated. Welcome back!')
       router.push('/orders')

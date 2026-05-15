@@ -47,10 +47,10 @@ function ResetPasswordContent() {
         body: JSON.stringify({ email, otp, newPassword }),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to reset password')
+        throw new Error(data.error || `Failed to reset password (${response.status})`)
       }
 
       toast.success('Password reset successfully!')
@@ -75,10 +75,10 @@ function ResetPasswordContent() {
         body: JSON.stringify({ email }),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to resend code')
+        throw new Error(data.error || `Failed to resend code (${response.status})`)
       }
 
       toast.success('Reset code resent! Check your email.')
