@@ -91,6 +91,7 @@ export interface OrderItem {
   id: string
   order_id: string
   service_id: string
+  tailor_id: string | null
   garment_description: string
   quantity: number
   price: number
@@ -98,10 +99,10 @@ export interface OrderItem {
   notes: string | null
   status: 'pending' | 'in_progress' | 'done'
   tailor_notes: string | null
-  completion_photos: string[]
   created_at: string
   // Relations
   service?: Service
+  tailor?: User
 }
 
 export interface Payment {
@@ -157,14 +158,19 @@ export interface RunnerProfile {
 }
 
 export interface TailorProfile {
+  id: string
   user_id: string
-  business_name: string | null
   specializations: string[]
-  weekly_capacity: number
-  turnaround_days: number
+  max_concurrent_orders: number
   rating: number
+  total_reviews: number
   completed_jobs: number
+  active: boolean
+  total_earnings: number
+  pending_earnings: number
+  total_payouts: number
   created_at: string
+  updated_at: string
 }
 
 export interface Notification {

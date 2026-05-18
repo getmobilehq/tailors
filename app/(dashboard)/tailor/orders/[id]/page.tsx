@@ -11,7 +11,8 @@ import { OrderMessages } from '@/components/orders/order-messages'
 import { OrderItemPhotos } from '@/components/orders/order-item-photos'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { TAILOR_PAYOUT_RATE } from '@/lib/constants'
-import { ArrowLeft, User, Calendar, CheckCircle } from 'lucide-react'
+import { tailorPayoutForOrder, tailorItemsSubtotal, myItems } from '@/lib/tailor-payout'
+import { ArrowLeft, User, Calendar } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function TailorOrderPage({ params }: { params: { id: string } }) {
@@ -57,8 +58,11 @@ export default async function TailorOrderPage({ params }: { params: { id: string
     .eq('order_id', params.id)
     .order('created_at', { ascending: true })
 
-  const isAssigned = order.tailor_id === user.id
-  const canAccept = !order.tailor_id && order.status === 'collected'
+  const myOrderItems = myItems(order, user.id)
+  const isAssigned = myOrderItems.length > 0
+  const itemsView = isAssigned ? myOrderItems : order.items || []
+  const mySubtotal = tailorItemsSubtotal(order, user.id)
+  const myPayout = tailorPayoutForOrder(order, user.id)
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -95,7 +99,7 @@ export default async function TailorOrderPage({ params }: { params: { id: string
                 <CardTitle>Items to Alter</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {order.items?.map((item: any) => (
+                {itemsView.map((item: any) => (
                   <div key={item.id} className="pb-4 border-b last:border-0">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
@@ -170,28 +174,7 @@ export default async function TailorOrderPage({ params }: { params: { id: string
 
             {/* Tailor Actions */}
             {isAssigned && (
-              <TailorActions order={order} />
-            )}
-
-            {/* Accept Order */}
-            {canAccept && (
-              <Card className="border-violet-200 bg-violet-50/50 dark:bg-violet-900/10">
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <CheckCircle className="h-10 w-10 mx-auto mb-3 text-violet-500" />
-                    <h3 className="font-semibold text-lg mb-1">Accept This Order</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      This order is available for you to work on. Accept it to get started.
-                    </p>
-                    <form action="/api/tailor/accept" method="POST">
-                      <input type="hidden" name="order_id" value={order.id} />
-                      <Button type="submit" size="lg">
-                        Accept Order
-                      </Button>
-                    </form>
-                  </div>
-                </CardContent>
-              </Card>
+              <TailorActions order={order} myItems={myOrderItems} />
             )}
           </div>
 
@@ -275,17 +258,17 @@ export default async function TailorOrderPage({ params }: { params: { id: string
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Service subtotal</span>
-                  <span>{formatPrice(order.subtotal)}</span>
+                  <span className="text-muted-foreground">Your items subtotal</span>
+                  <span>{formatPrice(mySubtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Your share ({Math.round(TAILOR_PAYOUT_RATE * 100)}%)</span>
-                  <span className="font-medium text-violet-600">{formatPrice(order.subtotal * TAILOR_PAYOUT_RATE)}</span>
+                  <span className="font-medium text-violet-600">{formatPrice(myPayout)}</span>
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between">
                     <span className="font-semibold">You earn</span>
-                    <span className="text-xl font-bold text-violet-600">{formatPrice(order.subtotal * TAILOR_PAYOUT_RATE)}</span>
+                    <span className="text-xl font-bold text-violet-600">{formatPrice(myPayout)}</span>
                   </div>
                 </div>
               </CardContent>

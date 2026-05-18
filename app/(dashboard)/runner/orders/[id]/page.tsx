@@ -38,7 +38,8 @@ export default async function RunnerOrderPage({ params }: { params: { id: string
       *,
       items:order_items(
         *,
-        service:services(*)
+        service:services(*),
+        tailor:tailor_id(full_name, phone)
       ),
       customer:customer_id(full_name, phone, email)
     `)
@@ -59,6 +60,22 @@ export default async function RunnerOrderPage({ params }: { params: { id: string
   const pickupSlot = PICKUP_SLOTS.find(s => s.id === order.pickup_slot)
   const canAccept = order.status === 'booked' && !order.runner_id
   const isAssigned = order.runner_id === user.id
+
+  // Group items by tailor so the runner sees one stop per tailor.
+  const tailorStops = (() => {
+    const groups = new Map<string, { tailor: any; items: any[] }>()
+    for (const item of order.items || []) {
+      const key = item.tailor_id || '__unassigned__'
+      if (!groups.has(key)) {
+        groups.set(key, { tailor: item.tailor, items: [] })
+      }
+      groups.get(key)!.items.push(item)
+    }
+    return Array.from(groups.entries()).map(([id, g]) => ({ id, ...g }))
+  })()
+
+  const showDropOffStops = ['collected', 'in_progress'].includes(order.status)
+  const showPickupStops = ['ready', 'out_for_delivery'].includes(order.status)
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -153,6 +170,68 @@ export default async function RunnerOrderPage({ params }: { params: { id: string
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Drop-off / Pickup stops grouped by tailor */}
+            {isAssigned && (showDropOffStops || showPickupStops) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {showDropOffStops ? 'Drop-off Stops' : 'Pickup Stops'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {tailorStops.map((stop, idx) => {
+                    const isUnassigned = stop.id === '__unassigned__'
+                    return (
+                      <div key={stop.id} className="border rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-0.5">Stop {idx + 1}</p>
+                            <p className="font-semibold">
+                              {isUnassigned
+                                ? 'Unassigned — admin to allocate'
+                                : stop.tailor?.full_name || 'Tailor'}
+                            </p>
+                            {!isUnassigned && stop.tailor?.phone && (
+                              <a
+                                href={`tel:${stop.tailor.phone}`}
+                                className="text-sm text-primary hover:underline flex items-center gap-1 mt-1"
+                              >
+                                <Phone className="h-3 w-3" />
+                                {stop.tailor.phone}
+                              </a>
+                            )}
+                          </div>
+                          <span className="text-xs px-2 py-1 rounded bg-muted">
+                            {stop.items.length} item{stop.items.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <ul className="text-sm text-muted-foreground space-y-1 mt-2">
+                          {stop.items.map((it: any) => (
+                            <li key={it.id} className="flex justify-between">
+                              <span>
+                                {it.service?.name} — {it.garment_description}
+                              </span>
+                              {showPickupStops && (
+                                <span
+                                  className={
+                                    it.status === 'done'
+                                      ? 'text-green-600'
+                                      : 'text-amber-600'
+                                  }
+                                >
+                                  {it.status === 'done' ? 'Ready' : 'Not ready'}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )
+                  })}
                 </CardContent>
               </Card>
             )}

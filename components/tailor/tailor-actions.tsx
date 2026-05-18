@@ -7,71 +7,57 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { CheckCircle } from 'lucide-react'
 import type { Order } from '@/lib/types'
 
 interface TailorActionsProps {
   order: Order
+  myItems: any[]
 }
 
-export function TailorActions({ order }: TailorActionsProps) {
+export function TailorActions({ order, myItems }: TailorActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [itemStatuses, setItemStatuses] = useState<Record<string, string>>(() => {
     const statuses: Record<string, string> = {}
-    order.items?.forEach((item: any) => {
+    myItems.forEach((item: any) => {
       statuses[item.id] = item.status
     })
     return statuses
   })
   const [itemNotes, setItemNotes] = useState<Record<string, string>>(() => {
     const notes: Record<string, string> = {}
-    order.items?.forEach((item: any) => {
+    myItems.forEach((item: any) => {
       notes[item.id] = item.tailor_notes || ''
     })
     return notes
   })
 
+  async function postItemUpdates(payloadItems: { id: string; status: string; tailor_notes: string | null }[]) {
+    const res = await fetch('/api/tailor/update-items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: order.id, items: payloadItems }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(body.error || `Failed to update items (${res.status})`)
+    }
+    return body as { ok: boolean; orderStatus: string | null; allDone: boolean }
+  }
+
   async function handleUpdateItems() {
     setLoading(true)
     try {
-      const supabase = createClient()
-
-      // Update each item
-      const updates = order.items?.map((item: any) => {
-        return supabase
-          .from('order_items')
-          .update({
-            status: itemStatuses[item.id],
-            tailor_notes: itemNotes[item.id] || null,
-          })
-          .eq('id', item.id)
-      })
-
-      if (updates) {
-        await Promise.all(updates)
-      }
-
-      // Check if all items are done, then update order status to 'ready'
-      const allDone = order.items?.every((item: any) => itemStatuses[item.id] === 'done')
-      const anyInProgress = order.items?.some((item: any) => itemStatuses[item.id] === 'in_progress')
-
-      if (allDone && order.status !== 'ready') {
-        await supabase
-          .from('orders')
-          .update({ status: 'ready' })
-          .eq('id', order.id)
-      } else if (anyInProgress && order.status === 'collected') {
-        // Auto-transition order to in_progress when tailor starts working
-        await supabase
-          .from('orders')
-          .update({ status: 'in_progress' })
-          .eq('id', order.id)
-      }
-
-      toast.success('Items updated successfully')
+      await postItemUpdates(
+        myItems.map((item: any) => ({
+          id: item.id,
+          status: itemStatuses[item.id],
+          tailor_notes: itemNotes[item.id] || null,
+        }))
+      )
+      toast.success('Items updated')
       router.refresh()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update items')
@@ -83,30 +69,18 @@ export function TailorActions({ order }: TailorActionsProps) {
   async function handleMarkAllDone() {
     setLoading(true)
     try {
-      const supabase = createClient()
-
-      // Update all items to done
-      const updates = order.items?.map((item: any) => {
-        return supabase
-          .from('order_items')
-          .update({
-            status: 'done',
-            tailor_notes: itemNotes[item.id] || null,
-          })
-          .eq('id', item.id)
-      })
-
-      if (updates) {
-        await Promise.all(updates)
+      const body = await postItemUpdates(
+        myItems.map((item: any) => ({
+          id: item.id,
+          status: 'done',
+          tailor_notes: itemNotes[item.id] || null,
+        }))
+      )
+      if (body.allDone) {
+        toast.success('All items done — order is ready for delivery.')
+      } else {
+        toast.success('Your items are done. Waiting on other tailor(s) before order goes ready.')
       }
-
-      // Update order status to ready
-      await supabase
-        .from('orders')
-        .update({ status: 'ready' })
-        .eq('id', order.id)
-
-      toast.success('All items marked as done! Order is ready for delivery.')
       router.refresh()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update items')
@@ -115,15 +89,18 @@ export function TailorActions({ order }: TailorActionsProps) {
     }
   }
 
-  const allDone = order.items?.every((item: any) => itemStatuses[item.id] === 'done')
+  const allMyItemsDone = myItems.every((item: any) => itemStatuses[item.id] === 'done')
+  const orderHasOtherTailors = (order.items || []).some(
+    (i: any) => i.tailor_id && !myItems.some((m: any) => m.id === i.id)
+  )
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Update Items</CardTitle>
+        <CardTitle>Update Your Items</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {order.items?.map((item: any) => (
+        {myItems.map((item: any) => (
           <div key={item.id} className="pb-6 border-b last:border-0">
             <h4 className="font-semibold mb-3">{item.service?.name}</h4>
 
@@ -164,26 +141,27 @@ export function TailorActions({ order }: TailorActionsProps) {
             onClick={handleUpdateItems}
             disabled={loading}
             className="flex-1"
-            variant={allDone ? "outline" : "default"}
+            variant={allMyItemsDone ? 'outline' : 'default'}
           >
             {loading ? 'Updating...' : 'Save Changes'}
           </Button>
 
-          {!allDone && (
-            <Button
-              onClick={handleMarkAllDone}
-              disabled={loading}
-              className="flex-1 gap-2"
-            >
+          {!allMyItemsDone && (
+            <Button onClick={handleMarkAllDone} disabled={loading} className="flex-1 gap-2">
               <CheckCircle className="h-4 w-4" />
-              {loading ? 'Updating...' : 'Mark All Done'}
+              {loading ? 'Updating...' : 'Mark All My Items Done'}
             </Button>
           )}
         </div>
 
-        {allDone && (
+        {allMyItemsDone && orderHasOtherTailors && (
+          <p className="text-sm text-amber-600 text-center">
+            Your items are done. Waiting on other tailor(s) before the order is ready for delivery.
+          </p>
+        )}
+        {allMyItemsDone && !orderHasOtherTailors && (
           <p className="text-sm text-green-600 text-center">
-            ✓ All items completed! Order is ready for delivery.
+            ✓ All items completed. Order is ready for delivery.
           </p>
         )}
       </CardContent>

@@ -6,15 +6,16 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StatusBadge } from '@/components/orders/status-badge'
 import { formatPrice } from '@/lib/utils'
-import { TAILOR_PAYOUT_RATE } from '@/lib/constants'
+import { tailorPayoutForOrder, myItems } from '@/lib/tailor-payout'
 import { Search, Scissors } from 'lucide-react'
 import Link from 'next/link'
 
 interface TailorOrderListProps {
   orders: any[]
+  tailorId: string
 }
 
-export function TailorOrderList({ orders }: TailorOrderListProps) {
+export function TailorOrderList({ orders, tailorId }: TailorOrderListProps) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sort, setSort] = useState('newest')
@@ -39,23 +40,22 @@ export function TailorOrderList({ orders }: TailorOrderListProps) {
       result = result.filter(order => order.status === statusFilter)
     }
 
-    // Sort
     switch (sort) {
       case 'oldest':
         result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
         break
       case 'payout_high':
-        result.sort((a, b) => (b.subtotal * TAILOR_PAYOUT_RATE) - (a.subtotal * TAILOR_PAYOUT_RATE))
+        result.sort((a, b) => tailorPayoutForOrder(b, tailorId) - tailorPayoutForOrder(a, tailorId))
         break
       case 'payout_low':
-        result.sort((a, b) => (a.subtotal * TAILOR_PAYOUT_RATE) - (b.subtotal * TAILOR_PAYOUT_RATE))
+        result.sort((a, b) => tailorPayoutForOrder(a, tailorId) - tailorPayoutForOrder(b, tailorId))
         break
-      default: // newest
+      default:
         result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     }
 
     return result
-  }, [orders, search, statusFilter, sort])
+  }, [orders, search, statusFilter, sort, tailorId])
 
   if (orders.length === 0) {
     return (
@@ -113,10 +113,11 @@ export function TailorOrderList({ orders }: TailorOrderListProps) {
         </Card>
       ) : (
         filteredOrders.map((order) => {
-          const totalItems = order.items?.length || 0
-          const doneItems = order.items?.filter((item: any) => item.status === 'done').length || 0
+          const mine = myItems(order, tailorId)
+          const totalItems = mine.length
+          const doneItems = mine.filter((item: any) => item.status === 'done').length
           const progressPercent = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0
-          const payout = order.subtotal * TAILOR_PAYOUT_RATE
+          const payout = tailorPayoutForOrder(order, tailorId)
 
           const collectedDate = order.collected_at ? new Date(order.collected_at) : null
           const daysAgo = collectedDate
@@ -147,15 +148,13 @@ export function TailorOrderList({ orders }: TailorOrderListProps) {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* Services */}
                   <p className="text-xs text-muted-foreground mb-3">
-                    {order.items?.map((item: any) => item.service?.name).filter(Boolean).join(', ')}
+                    {mine.map((item: any) => item.service?.name).filter(Boolean).join(', ')}
                   </p>
 
-                  {/* Progress bar */}
                   <div className="mb-3">
                     <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                      <span>{doneItems}/{totalItems} items done</span>
+                      <span>{doneItems}/{totalItems} of your items done</span>
                       <span>{progressPercent}%</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -166,17 +165,16 @@ export function TailorOrderList({ orders }: TailorOrderListProps) {
                     </div>
                   </div>
 
-                  {/* Payout */}
                   <div className="flex items-center justify-between">
                     <div className="flex gap-4 text-xs">
-                      {order.items?.filter((item: any) => item.status === 'pending').length > 0 && (
+                      {mine.filter((item: any) => item.status === 'pending').length > 0 && (
                         <span className="text-gray-600">
-                          {order.items.filter((item: any) => item.status === 'pending').length} pending
+                          {mine.filter((item: any) => item.status === 'pending').length} pending
                         </span>
                       )}
-                      {order.items?.filter((item: any) => item.status === 'in_progress').length > 0 && (
+                      {mine.filter((item: any) => item.status === 'in_progress').length > 0 && (
                         <span className="text-orange-600">
-                          {order.items.filter((item: any) => item.status === 'in_progress').length} in progress
+                          {mine.filter((item: any) => item.status === 'in_progress').length} in progress
                         </span>
                       )}
                       {doneItems > 0 && (

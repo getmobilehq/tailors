@@ -17,13 +17,9 @@ import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/orders/status-badge'
 import { TailorOrderList } from '@/components/tailor/tailor-order-list'
 import { formatPrice, formatDate } from '@/lib/utils'
-import { TAILOR_PAYOUT_RATE } from '@/lib/constants'
+import { tailorPayoutForOrder, tailorItemsSubtotal, myItems } from '@/lib/tailor-payout'
 import Link from 'next/link'
-import { Scissors, DollarSign, Clock, CheckCircle, Star, Calendar, History, Settings } from 'lucide-react'
-
-function calculateTailorPayout(subtotal: number): number {
-  return subtotal * TAILOR_PAYOUT_RATE
-}
+import { Scissors, DollarSign, Star, Calendar, History, Settings } from 'lucide-react'
 
 export default async function TailorDashboardPage() {
   const supabase = await createClient()
@@ -50,7 +46,19 @@ export default async function TailorDashboardPage() {
     .eq('user_id', user.id)
     .single()
 
-  // Get all orders assigned to this tailor
+  // Find every order where this tailor either owns at least one item OR is the
+  // legacy primary tailor on the order.
+  const { data: itemOwnedOrderRows } = await supabase
+    .from('order_items')
+    .select('order_id')
+    .eq('tailor_id', user.id)
+  const itemOwnedOrderIds = Array.from(new Set((itemOwnedOrderRows || []).map((r) => r.order_id)))
+
+  const orFilter =
+    itemOwnedOrderIds.length > 0
+      ? `tailor_id.eq.${user.id},id.in.(${itemOwnedOrderIds.join(',')})`
+      : `tailor_id.eq.${user.id}`
+
   const { data: assignedOrders } = await supabase
     .from('orders')
     .select(`
@@ -58,33 +66,18 @@ export default async function TailorDashboardPage() {
       customer:customer_id(full_name, phone),
       items:order_items(
         id,
+        tailor_id,
+        price,
+        quantity,
         garment_description,
         status,
         service:services(name)
       )
     `)
-    .eq('tailor_id', user.id)
+    .or(orFilter)
     .in('status', ['collected', 'in_progress', 'ready'])
     .order('created_at', { ascending: false })
 
-  // Get available orders (collected but no tailor assigned yet)
-  const { data: availableOrders } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      customer:customer_id(full_name),
-      items:order_items(
-        id,
-        garment_description,
-        service:services(name)
-      )
-    `)
-    .is('tailor_id', null)
-    .eq('status', 'collected')
-    .order('collected_at', { ascending: true })
-    .limit(20)
-
-  // Get completed orders for earnings calculation and history
   const { data: completedOrders } = await supabase
     .from('orders')
     .select(`
@@ -92,10 +85,13 @@ export default async function TailorDashboardPage() {
       customer:customer_id(full_name),
       items:order_items(
         id,
+        tailor_id,
+        price,
+        quantity,
         service:services(name)
       )
     `)
-    .eq('tailor_id', user.id)
+    .or(orFilter)
     .in('status', ['out_for_delivery', 'delivered', 'completed'])
     .order('updated_at', { ascending: false })
 
@@ -108,18 +104,15 @@ export default async function TailorDashboardPage() {
 
   const weeklyEarnings = ordersWithCompletion
     .filter(order => new Date(order.completed_at) >= weekAgo)
-    .reduce((sum, order) => sum + calculateTailorPayout(order.subtotal), 0)
+    .reduce((sum, order) => sum + tailorPayoutForOrder(order, user.id), 0)
 
   const monthlyEarnings = ordersWithCompletion
     .filter(order => new Date(order.completed_at) >= monthAgo)
-    .reduce((sum, order) => sum + calculateTailorPayout(order.subtotal), 0)
+    .reduce((sum, order) => sum + tailorPayoutForOrder(order, user.id), 0)
 
-  // Calculate active items count
   const activeItemsCount = assignedOrders?.reduce((total, order) => {
-    const activeItems = order.items?.filter((item: any) =>
-      item.status !== 'done'
-    ).length || 0
-    return total + activeItems
+    const mine = myItems(order, user.id)
+    return total + mine.filter((i) => i.status !== 'done').length
   }, 0) || 0
 
   const stats = [
@@ -204,74 +197,13 @@ export default async function TailorDashboardPage() {
           <TabsTrigger value="assigned">
             My Orders ({assignedOrders?.length || 0})
           </TabsTrigger>
-          <TabsTrigger value="available">
-            Available ({availableOrders?.length || 0})
-          </TabsTrigger>
           <TabsTrigger value="history">
             History ({completedOrders?.length || 0})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="assigned">
-          <TailorOrderList orders={assignedOrders || []} />
-        </TabsContent>
-
-        <TabsContent value="available" className="space-y-4">
-          {!availableOrders || availableOrders.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">
-                <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No available orders at the moment.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            availableOrders.map((order) => (
-              <Card key={order.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg mb-1">
-                        {order.order_number}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {order.customer?.full_name}
-                      </p>
-                    </div>
-                    <StatusBadge status={order.status} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}
-                      </p>
-                      <div className="text-xs text-muted-foreground">
-                        {order.items?.map((item: any, i: number) => (
-                          <span key={item.id}>
-                            {item.service?.name}
-                            {i < order.items.length - 1 ? ', ' : ''}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Your Payout</p>
-                        <p className="text-lg font-bold text-violet-600">{formatPrice(calculateTailorPayout(order.subtotal))}</p>
-                      </div>
-                      <form action="/api/tailor/accept" method="POST">
-                        <input type="hidden" name="order_id" value={order.id} />
-                        <Button type="submit" size="sm">
-                          Accept
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+          <TailorOrderList orders={assignedOrders || []} tailorId={user.id} />
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
@@ -295,13 +227,13 @@ export default async function TailorDashboardPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Total Earned</p>
                       <p className="text-2xl font-bold text-violet-600">
-                        {formatPrice(completedOrders.reduce((sum, o) => sum + calculateTailorPayout(o.subtotal), 0))}
+                        {formatPrice(completedOrders.reduce((sum, o) => sum + tailorPayoutForOrder(o, user.id), 0))}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Avg per Order</p>
                       <p className="text-2xl font-bold">
-                        {formatPrice(completedOrders.reduce((sum, o) => sum + calculateTailorPayout(o.subtotal), 0) / completedOrders.length)}
+                        {formatPrice(completedOrders.reduce((sum, o) => sum + tailorPayoutForOrder(o, user.id), 0) / completedOrders.length)}
                       </p>
                     </div>
                   </div>
@@ -351,10 +283,10 @@ export default async function TailorDashboardPage() {
                               <StatusBadge status={order.status} />
                             </TableCell>
                             <TableCell className="text-right text-muted-foreground">
-                              {formatPrice(order.subtotal)}
+                              {formatPrice(tailorItemsSubtotal(order, user.id))}
                             </TableCell>
                             <TableCell className="text-right font-semibold text-violet-600">
-                              {formatPrice(calculateTailorPayout(order.subtotal))}
+                              {formatPrice(tailorPayoutForOrder(order, user.id))}
                             </TableCell>
                           </TableRow>
                         ))}

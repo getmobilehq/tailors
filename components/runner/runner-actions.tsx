@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { CheckCircle } from 'lucide-react'
 import type { Order } from '@/lib/types'
@@ -33,9 +32,6 @@ export function RunnerActions({ order }: RunnerActionsProps) {
 
     setLoading(true)
     try {
-      const supabase = createClient()
-      
-      // Validate measurements
       const numericMeasurements: Record<string, number> = {}
       Object.entries(measurements).forEach(([key, value]) => {
         if (value) {
@@ -46,19 +42,24 @@ export function RunnerActions({ order }: RunnerActionsProps) {
         }
       })
 
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          status: 'collected',
+      const res = await fetch('/api/runner/collect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
           measurements: numericMeasurements,
-          runner_notes: notes || null,
-          collected_at: new Date().toISOString(),
-        })
-        .eq('id', order.id)
+          runnerNotes: notes || null,
+        }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Failed to mark collected')
 
-      if (error) throw error
-
-      toast.success('Order marked as collected')
+      const unassignedCount = body.unassigned?.length ?? 0
+      if (unassignedCount > 0) {
+        toast.success(`Order collected. ${unassignedCount} item(s) need admin assignment.`)
+      } else {
+        toast.success('Order collected and routed to tailors')
+      }
       router.refresh()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update order')
@@ -72,17 +73,13 @@ export function RunnerActions({ order }: RunnerActionsProps) {
 
     setLoading(true)
     try {
-      const supabase = createClient()
-      
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          status: 'delivered',
-          completed_at: new Date().toISOString(),
-        })
-        .eq('id', order.id)
-
-      if (error) throw error
+      const res = await fetch('/api/runner/deliver', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Failed to mark delivered')
 
       toast.success('Order marked as delivered')
       router.refresh()
