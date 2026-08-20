@@ -146,7 +146,9 @@ Uses `@/` alias pointing to `./src/` (configured in tsconfig.json and vite.confi
 
 ## Deployment
 
-Recommended: Vercel
-- Add all environment variables
+Deployed on Netlify (config in `netlify.toml`; full guide in `NETLIFY_DEPLOYMENT.md`)
+- Build command is `npm ci && npm run build`, publish directory `.next`
+- The Next.js plugin is auto-detected by Netlify — do not add `@netlify/plugin-nextjs` to package.json
+- Add all environment variables in Netlify site settings (`NEXT_PUBLIC_` vars are listed in `SECRETS_SCAN_OMIT_KEYS`)
 - Update Stripe webhook URL to production domain
 - Update Supabase Auth URL configuration with production domain

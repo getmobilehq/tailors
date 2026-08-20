@@ -12,17 +12,7 @@ This guide will help you deploy TailorSpace to Netlify with automatic CI/CD.
 
 ---
 
-## Step 1: Install Netlify Next.js Plugin
-
-First, add the Netlify Next.js plugin to your project:
-
-```bash
-npm install -D @netlify/plugin-nextjs
-```
-
----
-
-## Step 2: Connect Repository to Netlify
+## Step 1: Connect Repository to Netlify
 
 1. **Log in to Netlify**: https://app.netlify.com
 2. **Click "Add new site"** → "Import an existing project"
@@ -31,13 +21,13 @@ npm install -D @netlify/plugin-nextjs
    - Select the repository: `getmobilehq/tailors`
 4. **Configure build settings**:
    - **Branch to deploy**: `main`
-   - **Build command**: `npm run build` (auto-detected)
-   - **Publish directory**: `.next` (auto-detected)
+   - **Build command**: `npm ci && npm run build` (read from `netlify.toml`)
+   - **Publish directory**: `.next` (read from `netlify.toml`)
    - **Functions directory**: Leave empty (Next.js API routes will be handled)
 
 ---
 
-## Step 3: Configure Environment Variables
+## Step 2: Configure Environment Variables
 
 In Netlify dashboard, go to **Site settings** → **Environment variables** and add:
 
@@ -72,11 +62,11 @@ NODE_ENV=production
 
 ---
 
-## Step 4: Deploy
+## Step 3: Deploy
 
 Click **"Deploy site"** button. Netlify will:
 1. ✅ Clone your repository
-2. ✅ Install dependencies (`npm install`)
+2. ✅ Install dependencies (`npm ci`)
 3. ✅ Run build command (`npm run build`)
 4. ✅ Deploy to CDN
 
@@ -84,7 +74,7 @@ Click **"Deploy site"** button. Netlify will:
 
 ---
 
-## Step 5: Post-Deployment Configuration
+## Step 4: Post-Deployment Configuration
 
 ### 5.1 Update App URL
 
@@ -132,7 +122,7 @@ Run all migrations in Supabase SQL Editor (if not already done):
 
 ---
 
-## Step 6: Configure Custom Domain (Optional)
+## Step 5: Configure Custom Domain (Optional)
 
 1. Go to **Domain settings** → **Add custom domain**
 2. Follow Netlify's instructions to configure DNS
@@ -143,7 +133,7 @@ Run all migrations in Supabase SQL Editor (if not already done):
 
 ---
 
-## Step 7: Enable Automatic Deployments (CI/CD)
+## Step 6: Enable Automatic Deployments (CI/CD)
 
 ✅ **Already configured!** Netlify automatically:
 - Deploys when you push to `main` branch
@@ -195,7 +185,7 @@ Run all migrations in Supabase SQL Editor (if not already done):
 - Check variable names match exactly
 
 **API Routes Not Working:**
-- Ensure `@netlify/plugin-nextjs` is installed
+- Ensure Netlify detected the Next.js runtime (check the build log)
 - Check that API routes are in `app/api/` directory
 - Verify serverless function size limits
 
