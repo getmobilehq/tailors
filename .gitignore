@@ -6,7 +6,8 @@ node_modules
 # testing
 /coverage
 *-test/
-*.test.*
+# NB: do not re-add "*.test.*" here -- it silently excludes the vitest suite
+# in lib/ from the repo. Env files are covered by the .env.* rules below.
 
 # next.js
 /.next/

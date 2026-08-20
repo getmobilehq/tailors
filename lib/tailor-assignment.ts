@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { pickTailorForCategory, choosePrimaryTailor } from '@/lib/tailor-assignment-core'
 
 export type AssignmentResult = {
   assigned: { itemId: string; tailorId: string }[]
@@ -63,17 +64,13 @@ export async function assignItemsToTailors(orderId: string): Promise<AssignmentR
       continue
     }
 
-    const eligible = tailors
-      .filter((t) => t.specializations?.includes(category))
-      .filter((t) => (loadByTailor.get(t.user_id) || 0) < t.max_concurrent_orders)
-      .sort((a, b) => (loadByTailor.get(a.user_id) || 0) - (loadByTailor.get(b.user_id) || 0))
+    const pick = pickTailorForCategory(category, tailors, loadByTailor)
 
-    if (eligible.length === 0) {
+    if (!pick) {
       unassigned.push({ itemId: item.id, reason: `no eligible tailor for category '${category}'` })
       continue
     }
 
-    const pick = eligible[0]
     const { error: updateError } = await admin
       .from('order_items')
       .update({ tailor_id: pick.user_id })
@@ -90,16 +87,7 @@ export async function assignItemsToTailors(orderId: string): Promise<AssignmentR
 
   // Pick a primary tailor (most items) to mirror onto orders.tailor_id so
   // legacy code paths (reviews, messaging, admin views) keep working.
-  const counts = new Map<string, number>()
-  for (const a of assigned) counts.set(a.tailorId, (counts.get(a.tailorId) || 0) + 1)
-  let primaryTailorId: string | null = null
-  let maxCount = 0
-  for (const [id, count] of counts) {
-    if (count > maxCount) {
-      maxCount = count
-      primaryTailorId = id
-    }
-  }
+  const primaryTailorId = choosePrimaryTailor(assigned)
 
   if (primaryTailorId) {
     await admin.from('orders').update({ tailor_id: primaryTailorId }).eq('id', orderId)
