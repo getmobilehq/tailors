@@ -8,7 +8,6 @@ TailorSpace Marketplace is a Next.js application for booking clothing alteration
 
 **Tech Stack:**
 - Next.js 14+ with App Router (TypeScript)
-- Vite (for development/build - note: uses Vite instead of standard Next.js build)
 - Supabase (PostgreSQL + Auth)
 - Stripe (payments)
 - Tailwind CSS v4 + shadcn/ui
@@ -20,14 +19,16 @@ TailorSpace Marketplace is a Next.js application for booking clothing alteration
 # Install dependencies
 npm install
 
-# Start development server (Vite runs on port 3000)
+# Start development server (http://localhost:3000)
 npm run dev
 
 # Build for production
 npm run build
-```
 
-**Note:** This project uses Vite instead of the standard Next.js dev server. The dev server runs at http://localhost:3000 and auto-opens in browser.
+# Run the unit test suite (vitest)
+npm test
+npm run test:watch
+```
 
 ## Environment Setup
 
@@ -44,7 +45,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## Database Setup
 
-The database schema is in `/src/supabase/schema.sql`. To set up:
+The database schema is in `supabase/schema.sql`. To set up:
 
 1. Create a Supabase project
 2. Run the schema SQL in Supabase SQL Editor
@@ -56,7 +57,12 @@ Key tables: `users`, `services`, `orders`, `order_items`, `payments`, `runner_pr
 
 ### Path Aliases
 
-Uses `@/` alias pointing to `./src/` (configured in tsconfig.json and vite.config.ts)
+Uses `@/` alias pointing to the repo root, i.e. `@/lib/types` is `./lib/types.ts`
+(configured in `tsconfig.json`, and mirrored in `vitest.config.mts` for tests).
+
+Note: the top-level `src/` directory is a leftover from the original Figma
+export and holds docs only. The application code lives in `app/`, `components/`,
+`lib/`, and `hooks/` at the repo root.
 
 ### App Directory Structure
 
@@ -124,6 +130,10 @@ Uses `@/` alias pointing to `./src/` (configured in tsconfig.json and vite.confi
 
 ### Testing
 
+**Unit tests:** `npm test` runs vitest over `lib/**/*.test.ts` — currently the
+multi-tailor payout split (`lib/tailor-payout.ts`) and the item-to-tailor picker
+(`lib/tailor-assignment-core.ts`). Pure logic only; no database or env vars needed.
+
 **Stripe test cards:**
 - Success: 4242 4242 4242 4242
 - Decline: 4000 0000 0000 0002
@@ -131,13 +141,12 @@ Uses `@/` alias pointing to `./src/` (configured in tsconfig.json and vite.confi
 **Creating test users:**
 1. Sign up via `/signup` (defaults to customer role)
 2. Change role in Supabase Table Editor → users table
-3. For runners/tailors, also create profile records (see `/src/QUICK_START.md` for SQL)
+3. For runners/tailors, also create profile records (see `src/QUICK_START.md` for SQL)
 
 **Service area:** Nottingham postcodes NG1, NG2, NG3, NG5, NG7, NG9
 
 ## Important Notes
 
-- **Vite configuration** (`vite.config.ts`) includes extensive package alias mappings due to versioned imports
 - **TypeScript types** are in `/lib/types.ts` - reference these for data structure
 - **Constants** (like DELIVERY_FEE) are in `/lib/constants.ts`
 - **Validations** (Zod schemas) are in `/lib/validations.ts`

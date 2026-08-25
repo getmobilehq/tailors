@@ -20,8 +20,11 @@ function getSequenceNumber(elapsedMs: number): 1 | 2 | 3 | null {
   return null
 }
 
-function formatPrice(pence: number): string {
-  return `£${(pence / 100).toFixed(2)}`
+// Money is stored in pounds: supabase/add-pending-payment-status.sql converted
+// orders.subtotal/total and order_items.price to DECIMAL(10,2). The "in pence"
+// comments left behind in supabase/schema.sql are stale.
+function formatPrice(pounds: number): string {
+  return `£${(Number(pounds) || 0).toFixed(2)}`
 }
 
 export async function GET(request: NextRequest) {
@@ -94,7 +97,7 @@ export async function GET(request: NextRequest) {
           const items = (orderItems || []).map((item: any) => ({
             serviceName: item.service?.name || 'Alteration Service',
             quantity: item.quantity,
-            price: item.price / 100,
+            price: Number(item.price) || 0,
           }))
 
           const token = generateRecoveryToken()
@@ -197,8 +200,8 @@ export async function GET(request: NextRequest) {
             to: user.email,
             customerName: user.full_name,
             items,
-            subtotal: `£${subtotal.toFixed(2)}`,
-            total: `£${total.toFixed(2)}`,
+            subtotal: formatPrice(subtotal),
+            total: formatPrice(total),
             recoveryUrl,
             unsubscribeUrl,
             sequenceNumber: seq as 1 | 2 | 3,
