@@ -10,6 +10,37 @@ import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
+// Supabase returns this when the account exists but its email was never
+// confirmed. `code` is the modern field; the message check covers older
+// gotrue responses that only set a string.
+function isEmailNotConfirmed(error: any) {
+  return (
+    error?.code === 'email_not_confirmed' ||
+    /email not confirmed/i.test(error?.message || '')
+  )
+}
+
+// Best effort. The user is sent to the verification screen either way, where a
+// Resend button is available if this call was rate limited.
+async function resendVerificationCode(email: string) {
+  try {
+    const response = await fetch('/api/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+
+    if (response.ok) {
+      toast.info('Your email is not verified yet - we sent you a new code.')
+      return
+    }
+  } catch {
+    // fall through to the generic message
+  }
+
+  toast.info('Your email is not verified yet. Enter the code we sent you.')
+}
+
 export default function LoginForm({ redirectTo }: { redirectTo: string }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -55,6 +86,17 @@ export default function LoginForm({ redirectTo }: { redirectTo: string }) {
 
       router.refresh()
     } catch (error: any) {
+      // An unverified account returns 400 here forever and the only route to
+      // /verify-email is the redirect right after signup - so closing that tab
+      // used to strand the account permanently. Send them back with a fresh code.
+      if (isEmailNotConfirmed(error)) {
+        await resendVerificationCode(email)
+        router.push(
+          `/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectTo)}`
+        )
+        return
+      }
+
       toast.error(error.message || 'Failed to sign in')
     } finally {
       setLoading(false)

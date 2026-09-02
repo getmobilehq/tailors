@@ -43,9 +43,14 @@ function VerifyEmailContent() {
 
       toast.success('Email verified successfully!')
 
-      // Redirect to login page
+      // Carry the original destination through so users who landed here from
+      // the login screen resume where they were headed.
+      const redirect = searchParams.get('redirect')
+
       setTimeout(() => {
-        router.push('/login')
+        router.push(
+          redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'
+        )
       }, 1000)
 
     } catch (error: any) {
