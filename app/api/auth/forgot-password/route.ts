@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { findAuthUserByEmail } from '@/lib/supabase/find-user'
 import { NextResponse } from 'next/server'
 import { sendPasswordResetEmail } from '@/lib/email'
 import { strictAuthLimiter, applyRateLimit } from '@/lib/rate-limit'
@@ -24,17 +25,16 @@ export async function POST(request: Request) {
     const supabase = createAdminClient()
 
     // Get user by email
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers()
-
-    if (listError) {
-      console.error('Error listing users:', listError)
+    let user
+    try {
+      user = await findAuthUserByEmail(supabase, email)
+    } catch (lookupError) {
+      console.error('Error looking up user:', lookupError)
       return NextResponse.json(
         { error: 'Failed to process request' },
         { status: 500 }
       )
     }
-
-    const user = users.find(u => u.email === email)
 
     // Don't reveal if user exists or not (security best practice)
     if (!user) {
