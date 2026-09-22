@@ -11,7 +11,7 @@ import type { CartReminderEmailProps } from '@/lib/types'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 const FROM_EMAIL = 'TailorSpace <support@send.tailorspace.uk>'
-const REPLY_TO = 'support@send.tailorspace.uk'
+const REPLY_TO = 'support@tailorspace.uk'
 
 // The Resend SDK never throws on a failed send: rate limits, suppressed
 // recipients, an unverified domain or a bad API key all resolve with
@@ -164,7 +164,7 @@ export async function sendVerificationEmail(to: string, name: string, otp: strin
 
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
           <p style="color: #999; font-size: 12px;">
-            This is an automated message from TailorSpace. Please do not reply to this email.
+            This is an automated message from TailorSpace. Questions? Just reply to this email.
           </p>
         </div>
       `,
@@ -200,7 +200,7 @@ export async function sendPasswordResetEmail(to: string, name: string, otp: stri
 
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
           <p style="color: #999; font-size: 12px;">
-            This is an automated message from TailorSpace. Please do not reply to this email.
+            This is an automated message from TailorSpace. Questions? Just reply to this email.
           </p>
         </div>
       `,
@@ -256,7 +256,7 @@ export async function sendApplicationApprovalEmail(to: string, name: string, app
 
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
           <p style="color: #999; font-size: 12px;">
-            This is an automated message from TailorSpace. Please do not reply to this email.
+            This is an automated message from TailorSpace. Questions? Just reply to this email.
           </p>
         </div>
       `,
@@ -352,7 +352,7 @@ export async function sendAdminPasswordResetEmail(to: string, name: string, temp
 
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
           <p style="color: #999; font-size: 12px;">
-            This is an automated message from TailorSpace. Please do not reply to this email.
+            This is an automated message from TailorSpace. Questions? Just reply to this email.
           </p>
         </div>
       `,
@@ -396,7 +396,7 @@ export async function sendApplicationRejectionEmail(to: string, name: string, ap
 
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
           <p style="color: #999; font-size: 12px;">
-            This is an automated message from TailorSpace. Please do not reply to this email.
+            This is an automated message from TailorSpace. Questions? Just reply to this email.
           </p>
         </div>
       `,
