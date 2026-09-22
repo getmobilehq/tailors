@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findAuthUserByEmail } from '@/lib/supabase/find-user'
 import { NextResponse } from 'next/server'
-import { sendVerificationEmail } from '@/lib/email'
+import { reissueVerificationOtp } from '@/lib/verification-otp'
 import { strictAuthLimiter, applyRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
@@ -51,36 +51,17 @@ export async function POST(request: Request) {
       )
     }
 
-    // Generate new OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString()
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
+    const result = await reissueVerificationOtp(supabase, user, email)
 
-    // Update user metadata with new OTP
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      user.id,
-      {
-        user_metadata: {
-          ...user.user_metadata,
-          otp,
-          otp_expiry: otpExpiry
-        }
+    if (!result.ok) {
+      if (result.stage === 'update') {
+        console.error('Error updating user:', result.error)
+        return NextResponse.json(
+          { error: 'Failed to generate new code' },
+          { status: 500 }
+        )
       }
-    )
-
-    if (updateError) {
-      console.error('Error updating user:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to generate new code' },
-        { status: 500 }
-      )
-    }
-
-    // Send new verification email
-    const full_name = user.user_metadata?.full_name || 'there'
-    const emailResult = await sendVerificationEmail(email, full_name, otp)
-
-    if (!emailResult.success) {
-      console.error('Failed to send verification email:', emailResult.error)
+      console.error('Failed to send verification email:', result.error)
       return NextResponse.json(
         { error: 'Failed to send verification email. Please try again.' },
         { status: 500 }

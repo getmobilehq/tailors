@@ -1,4 +1,4 @@
-import { Resend } from 'resend'
+import { Resend, type CreateEmailOptions } from 'resend'
 import { render } from '@react-email/render'
 import OrderConfirmationEmail from '@/emails/order-confirmation'
 import OrderStatusUpdateEmail from '@/emails/order-status-update'
@@ -12,6 +12,16 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 const FROM_EMAIL = 'TailorSpace <support@send.tailorspace.uk>'
 const REPLY_TO = 'support@send.tailorspace.uk'
+
+// The Resend SDK never throws on a failed send: rate limits, suppressed
+// recipients, an unverified domain or a bad API key all resolve with
+// { data: null, error }. Throw instead, so each sender's catch reports failure
+// rather than logging the error object as a successful send.
+async function deliver(payload: CreateEmailOptions) {
+  const { data, error } = await resend.emails.send(payload)
+  if (error) throw error
+  return data
+}
 
 interface OrderConfirmationData {
   to: string
@@ -46,7 +56,7 @@ export async function sendOrderConfirmation(data: OrderConfirmationData) {
       })
     )
 
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to: data.to,
       replyTo: REPLY_TO,
@@ -88,7 +98,7 @@ export async function sendOrderStatusUpdate(data: OrderStatusUpdateData) {
 
     const subject = statusSubjects[data.status] || 'Order Update'
 
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to: data.to,
       replyTo: REPLY_TO,
@@ -106,7 +116,7 @@ export async function sendOrderStatusUpdate(data: OrderStatusUpdateData) {
 
 export async function sendWelcomeEmail(to: string, name: string) {
   try {
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to,
       replyTo: REPLY_TO,
@@ -134,7 +144,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
 
 export async function sendVerificationEmail(to: string, name: string, otp: string) {
   try {
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to,
       replyTo: REPLY_TO,
@@ -170,7 +180,7 @@ export async function sendVerificationEmail(to: string, name: string, otp: strin
 
 export async function sendPasswordResetEmail(to: string, name: string, otp: string) {
   try {
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to,
       replyTo: REPLY_TO,
@@ -208,7 +218,7 @@ export async function sendApplicationApprovalEmail(to: string, name: string, app
   const roleTitle = applicationType === 'runner' ? 'Runner' : 'Tailor'
 
   try {
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to,
       replyTo: REPLY_TO,
@@ -298,7 +308,7 @@ export async function sendCartReminder(data: {
         : 'Last chance: your cart expires soon',
     }
 
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to: data.to,
       replyTo: REPLY_TO,
@@ -316,7 +326,7 @@ export async function sendCartReminder(data: {
 
 export async function sendAdminPasswordResetEmail(to: string, name: string, tempPassword: string) {
   try {
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to,
       replyTo: REPLY_TO,
@@ -360,7 +370,7 @@ export async function sendApplicationRejectionEmail(to: string, name: string, ap
   const roleTitle = applicationType === 'runner' ? 'Runner' : 'Tailor'
 
   try {
-    const result = await resend.emails.send({
+    const result = await deliver({
       from: FROM_EMAIL,
       to,
       replyTo: REPLY_TO,

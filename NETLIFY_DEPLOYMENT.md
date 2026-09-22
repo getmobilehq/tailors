@@ -46,6 +46,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_... (if using in frontend)
 
 # Resend Email
 RESEND_API_KEY=re_...
+RESEND_WEBHOOK_SECRET=whsec_... (from the Resend webhook for /api/webhooks/resend)
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=https://your-site-name.netlify.app (update after deployment)

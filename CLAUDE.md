@@ -126,13 +126,15 @@ export and holds docs only. The application code lives in `app/`, `components/`,
 
 - `/api/checkout` - Creates Stripe checkout session
 - `/api/webhooks/stripe` - Handles Stripe webhook (checkout.session.completed)
+- `/api/webhooks/resend` - Reports bounced/failed/complained/delayed emails to Sentry (needs `RESEND_WEBHOOK_SECRET`)
 - `/api/runner/accept` - Runner accepts a job
 
 ### Testing
 
 **Unit tests:** `npm test` runs vitest over `lib/**/*.test.ts` — currently the
-multi-tailor payout split (`lib/tailor-payout.ts`) and the item-to-tailor picker
-(`lib/tailor-assignment-core.ts`). Pure logic only; no database or env vars needed.
+multi-tailor payout split (`lib/tailor-payout.ts`), the item-to-tailor picker
+(`lib/tailor-assignment-core.ts`), email send-failure handling (`lib/email.ts`, with
+Resend mocked) and the rate limiter. No database or env vars needed.
 
 **Stripe test cards:**
 - Success: 4242 4242 4242 4242

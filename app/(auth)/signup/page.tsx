@@ -49,7 +49,11 @@ export default function SignUpPage() {
         throw new Error(data.error || 'Failed to create account')
       }
 
-      toast.success(data.message || 'Verification code sent to your email!')
+      if (data.emailFailed) {
+        toast.warning(data.message)
+      } else {
+        toast.success(data.message || 'Verification code sent to your email!')
+      }
 
       // Redirect to verification page with email
       router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)

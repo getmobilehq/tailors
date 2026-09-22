@@ -6,14 +6,16 @@ type RateLimitOptions = {
   uniqueTokenPerInterval: number // Max number of unique tokens (IPs)
 }
 
-// In-memory cache for rate limiting
-// In production, consider using Redis for distributed rate limiting
-const tokenCache = new LRUCache<string, number[]>({
-  max: 500, // Maximum number of items in cache
-  ttl: 60000, // Items expire after 1 minute
-})
-
 export function rateLimit(options: RateLimitOptions) {
+  // In-memory cache for rate limiting, one per limiter so entries live as long
+  // as the limiter's own window. A single shared cache with a 1-minute TTL
+  // evicted hourly limiters' history after a minute.
+  // In production, consider using Redis for distributed rate limiting
+  const tokenCache = new LRUCache<string, number[]>({
+    max: options.uniqueTokenPerInterval,
+    ttl: options.interval,
+  })
+
   return {
     check: (identifier: string, limit: number): { success: boolean; remaining: number; reset: number } => {
       const tokenCount = tokenCache.get(identifier) || []
@@ -95,7 +97,10 @@ export async function applyRateLimit(
   limit: number,
   identifier?: string
 ): Promise<Response | null> {
-  const clientId = identifier || getClientIdentifier(request)
+  // Namespace by route so endpoints sharing a limiter keep separate counts -
+  // otherwise resend-code clicks would use up the same IP's forgot-password quota
+  const route = new URL(request.url).pathname
+  const clientId = `${route}:${identifier || getClientIdentifier(request)}`
   const { success, remaining, reset } = limiter.check(clientId, limit)
 
   if (!success) {
