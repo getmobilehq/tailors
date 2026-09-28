@@ -10,27 +10,37 @@ import { useCart } from '@/hooks/use-cart'
 
 export default function SuccessContent({
   sessionId,
+  orderNumber,
+  payAtDropoff = false,
 }: {
   sessionId?: string
+  orderNumber?: string
+  payAtDropoff?: boolean
 }) {
   const router = useRouter()
   const { clearCart } = useCart()
   const [hasCleared, setHasCleared] = useState(false)
 
+  // A Stripe session means the card went through; an order number with no
+  // session is a drop-off order that will be paid at the counter.
+  const confirmed = Boolean(sessionId || orderNumber)
+
   useEffect(() => {
-    if (sessionId && !hasCleared) {
+    if (confirmed && !hasCleared) {
       clearCart()
       if (typeof window !== 'undefined') {
         localStorage.removeItem('pickup_date')
         localStorage.removeItem('pickup_slot')
+        localStorage.removeItem('fulfilment_type')
+        localStorage.removeItem('dropoff_date')
       }
       setHasCleared(true)
-    } else if (!sessionId) {
+    } else if (!confirmed) {
       router.push('/book')
     }
-  }, [sessionId, clearCart, router, hasCleared])
+  }, [confirmed, clearCart, router, hasCleared])
 
-  if (!sessionId) {
+  if (!confirmed) {
     return null
   }
 
@@ -44,9 +54,14 @@ export default function SuccessContent({
 
           <h1 className="text-3xl mb-3">Order Confirmed!</h1>
 
+          {orderNumber && (
+            <p className="text-sm text-muted-foreground mb-2">Order {orderNumber}</p>
+          )}
+
           <p className="text-muted-foreground mb-8">
-            Thank you for your order. We'll send you a confirmation email shortly with your order details.
-            Our expert runner will arrive at your scheduled time to collect your items.
+            {payAtDropoff
+              ? "Thank you for your order. We'll email you the details and the drop-off address. Bring your items in on the day you chose and pay at the counter."
+              : "Thank you for your order. We'll send you a confirmation email shortly with your order details. Our expert runner will arrive at your scheduled time to collect your items."}
           </p>
 
           <div className="space-y-3">
@@ -62,9 +77,19 @@ export default function SuccessContent({
             <p className="font-semibold mb-2">What happens next?</p>
             <ul className="text-left space-y-1 text-muted-foreground">
               <li>✓ You'll receive an order confirmation email</li>
-              <li>✓ Our runner will arrive at your scheduled time</li>
-              <li>✓ They'll take measurements and collect your items</li>
-              <li>✓ Track your order progress in real-time</li>
+              {payAtDropoff ? (
+                <>
+                  <li>✓ Bring your items to us on the day you chose</li>
+                  <li>✓ We'll take measurements and payment at the counter</li>
+                  <li>✓ We'll let you know as soon as they're ready to collect</li>
+                </>
+              ) : (
+                <>
+                  <li>✓ Our runner will arrive at your scheduled time</li>
+                  <li>✓ They'll take measurements and collect your items</li>
+                  <li>✓ Track your order progress in real-time</li>
+                </>
+              )}
             </ul>
           </div>
         </CardContent>

@@ -14,6 +14,8 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { formatDate, formatPrice } from '@/lib/utils'
 import { PICKUP_SLOTS, DELIVERY_FEE } from '@/lib/constants'
+import { DropoffAddress } from '@/components/booking/dropoff-address'
+import type { DropoffLocation, FulfilmentType, PaymentMethod } from '@/lib/types'
 import type { SavedAddress } from '@/lib/types'
 
 interface RecoveryOrder {
@@ -34,9 +36,15 @@ export default function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const recoveryOrderId = searchParams.get('recover')
-  const { items } = useCart()
+  const { items, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [pickupInfo, setPickupInfo] = useState({ date: '', slot: '' })
+  const [fulfilment, setFulfilment] = useState<FulfilmentType>('pickup')
+  const [dropoffDate, setDropoffDate] = useState('')
+  const [dropoff, setDropoff] = useState<DropoffLocation | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('online')
+
+  const isDropoff = fulfilment === 'dropoff'
   const [recoveryOrder, setRecoveryOrder] = useState<RecoveryOrder | null>(null)
   const [recoveryLoading, setRecoveryLoading] = useState(!!recoveryOrderId)
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
@@ -103,6 +111,35 @@ export default function CheckoutContent() {
 
     if (items.length === 0) {
       router.push('/book')
+      return
+    }
+
+    const chosenFulfilment =
+      localStorage.getItem('fulfilment_type') === 'dropoff' ? 'dropoff' : 'pickup'
+    setFulfilment(chosenFulfilment)
+
+    if (chosenFulfilment === 'dropoff') {
+      const chosenDate = localStorage.getItem('dropoff_date')
+      if (!chosenDate) {
+        router.push('/book/schedule')
+        return
+      }
+      setDropoffDate(chosenDate)
+      setPaymentMethod('in_person')
+
+      fetch('/api/dropoff-location')
+        .then((res) => res.json())
+        .then((data) => {
+          // The location was switched off between steps
+          if (!data.available) {
+            toast.error('Drop-off is not available right now - please choose a pickup')
+            router.push('/book/schedule')
+            return
+          }
+          setDropoff(data.location)
+        })
+        .catch(() => router.push('/book/schedule'))
+
       return
     }
 
@@ -200,15 +237,23 @@ export default function CheckoutContent() {
   async function handleCheckout() {
     // Validate required fields (skip for recovery mode where address is pre-filled)
     if (!recoveryOrder) {
-      if (!formData.line1 || !formData.city || !formData.postcode || !formData.phone) {
-        toast.error('Please fill in all required fields')
-        return
-      }
+      if (isDropoff) {
+        // Drop-off customers bring the items to us, so there is no address to take
+        if (!formData.phone) {
+          toast.error('Please enter a phone number')
+          return
+        }
+      } else {
+        if (!formData.line1 || !formData.city || !formData.postcode || !formData.phone) {
+          toast.error('Please fill in all required fields')
+          return
+        }
 
-      // Validate Nottingham postcode
-      if (!formData.postcode.toUpperCase().startsWith('NG')) {
-        toast.error('We currently only serve Nottingham postcodes (NG)')
-        return
+        // Validate Nottingham postcode
+        if (!formData.postcode.toUpperCase().startsWith('NG')) {
+          toast.error('We currently only serve Nottingham postcodes (NG)')
+          return
+        }
       }
     }
 
@@ -252,16 +297,21 @@ export default function CheckoutContent() {
             photos: item.photos,
             notes: item.notes,
           })),
-          address: {
-            line1: formData.line1,
-            line2: formData.line2,
-            city: formData.city,
-            postcode: formData.postcode,
-          },
+          address: isDropoff
+            ? null
+            : {
+                line1: formData.line1,
+                line2: formData.line2,
+                city: formData.city,
+                postcode: formData.postcode,
+              },
           phone: formData.phone,
           notes: formData.notes,
-          pickupDate: pickupInfo.date,
-          pickupSlot: pickupInfo.slot,
+          fulfilment,
+          paymentMethod,
+          pickupDate: isDropoff ? null : pickupInfo.date,
+          pickupSlot: isDropoff ? null : pickupInfo.slot,
+          dropoffDate: isDropoff ? dropoffDate : null,
         }),
       })
 
@@ -281,6 +331,16 @@ export default function CheckoutContent() {
       }
 
       const orderData = await orderResponse.json()
+
+      // Paying at the counter: the order is already confirmed, so there is no
+      // Stripe session to send them to.
+      if (!orderData.requiresPayment) {
+        clearCart()
+        localStorage.removeItem('fulfilment_type')
+        localStorage.removeItem('dropoff_date')
+        router.push(`/book/success?order=${orderData.orderNumber}&unpaid=1`)
+        return
+      }
 
       // Step 2: Create Stripe checkout session with order ID
       const checkoutResponse = await fetch('/api/checkout', {
@@ -357,11 +417,12 @@ export default function CheckoutContent() {
     )
   }
 
-  if (!recoveryOrder && !pickupInfo.date) {
+  if (!recoveryOrder && !pickupInfo.date && !dropoffDate) {
     return null
   }
 
   const slotDetails = PICKUP_SLOTS.find(s => s.id === pickupInfo.slot)
+  const payAtCounter = isDropoff && paymentMethod === 'in_person'
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -382,25 +443,76 @@ export default function CheckoutContent() {
 
       <div className="grid lg:grid-cols-[1fr,320px] gap-8">
         <div className="space-y-6">
-          {/* Pickup Summary */}
+          {/* Pickup or drop-off summary */}
           <Card>
             <CardHeader>
-              <CardTitle>Pickup Details</CardTitle>
+              <CardTitle>{isDropoff ? 'Drop-off Details' : 'Pickup Details'}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="font-medium">{formatDate(pickupInfo.date)}</p>
-                  <p className="text-sm text-muted-foreground">{slotDetails?.label} ({slotDetails?.time})</p>
+                  <p className="font-medium">
+                    {formatDate(isDropoff ? dropoffDate : pickupInfo.date)}
+                  </p>
+                  {isDropoff ? (
+                    <p className="text-sm text-muted-foreground">
+                      Bring your items in any time during opening hours
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{slotDetails?.label} ({slotDetails?.time})</p>
+                  )}
                 </div>
                 <Button variant="outline" size="sm" asChild>
                   <Link href="/book/schedule">Change</Link>
                 </Button>
               </div>
+
+              {isDropoff && dropoff && <DropoffAddress location={dropoff} />}
             </CardContent>
           </Card>
 
-          {/* Address Form */}
+          {/* How to pay - only drop-off orders can be paid at the counter */}
+          {isDropoff && (
+            <Card>
+              <CardHeader>
+                <CardTitle>How would you like to pay?</CardTitle>
+              </CardHeader>
+              <CardContent className="grid sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('in_person')}
+                  className={`p-4 rounded-lg border-2 text-left transition-all hover:shadow-md ${
+                    paymentMethod === 'in_person'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="font-semibold mb-1">Pay when I drop off</div>
+                  <div className="text-sm text-muted-foreground">
+                    Cash or card at the counter
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('online')}
+                  className={`p-4 rounded-lg border-2 text-left transition-all hover:shadow-md ${
+                    paymentMethod === 'online'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="font-semibold mb-1">Pay now by card</div>
+                  <div className="text-sm text-muted-foreground">
+                    Secure payment through Stripe
+                  </div>
+                </button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Address Form - drop-off customers bring the items to us */}
+          {!isDropoff && (
           <Card>
             <CardHeader>
               <CardTitle>Collection Address</CardTitle>
@@ -545,6 +657,16 @@ export default function CheckoutContent() {
                 </div>
               )}
 
+            </CardContent>
+          </Card>
+          )}
+
+          {/* Contact details are needed either way */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">
                   Phone Number <span className="text-destructive">*</span>
@@ -561,11 +683,17 @@ export default function CheckoutContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Delivery Instructions (Optional)</Label>
+                <Label htmlFor="notes">
+                  {isDropoff ? 'Anything we should know? (Optional)' : 'Delivery Instructions (Optional)'}
+                </Label>
                 <Textarea
                   id="notes"
                   name="notes"
-                  placeholder="e.g., Ring doorbell, leave with neighbor, etc."
+                  placeholder={
+                    isDropoff
+                      ? 'e.g., I need these back before Saturday'
+                      : 'e.g., Ring doorbell, leave with neighbor, etc.'
+                  }
                   value={formData.notes}
                   onChange={handleChange}
                   rows={3}
@@ -608,7 +736,7 @@ export default function CheckoutContent() {
               </CardContent>
             </Card>
           ) : (
-            <CartSummary />
+            <CartSummary fulfilment={fulfilment} />
           )}
           <Button
             onClick={handleCheckout}
@@ -617,10 +745,16 @@ export default function CheckoutContent() {
             disabled={loading}
           >
             <CreditCard className="h-4 w-4" />
-            {loading ? 'Processing...' : 'Pay Securely'}
+            {loading
+              ? 'Processing...'
+              : payAtCounter
+                ? 'Confirm Order'
+                : 'Pay Securely'}
           </Button>
           <p className="text-xs text-center text-muted-foreground">
-            Secure payment powered by Stripe
+            {payAtCounter
+              ? 'Pay by cash or card when you drop your items off'
+              : 'Secure payment powered by Stripe'}
           </p>
         </div>
       </div>

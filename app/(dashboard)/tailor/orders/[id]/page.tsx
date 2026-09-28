@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/orders/status-badge'
+import { DropoffActions } from '@/components/orders/dropoff-actions'
 import { TailorActions } from '@/components/tailor/tailor-actions'
 import { OrderTimeline } from '@/components/orders/order-timeline'
 import { OrderMessages } from '@/components/orders/order-messages'
@@ -86,10 +87,24 @@ export default async function TailorOrderPage({ params }: { params: { id: string
                   Placed {formatDate(order.created_at)}
                 </p>
               </div>
-              <StatusBadge status={order.status} />
+              <div className="flex flex-col items-end gap-2">
+                <StatusBadge status={order.status} fulfilment={order.fulfilment_type} />
+                {order.fulfilment_type === 'dropoff' && (
+                  <span className="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700">
+                    Drop-off
+                  </span>
+                )}
+                {order.payment_status === 'unpaid' && (
+                  <span className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-800">
+                    Unpaid
+                  </span>
+                )}
+              </div>
             </div>
           </CardHeader>
         </Card>
+
+        <DropoffActions order={order as any} />
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">

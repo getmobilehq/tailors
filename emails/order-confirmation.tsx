@@ -18,6 +18,13 @@ interface OrderConfirmationEmailProps {
   pickupDate?: string
   pickupTime?: string
   itemCount: number
+  /** Set for drop-off orders: where and when to bring the items */
+  dropoff?: {
+    date?: string
+    address: string
+    hours: string
+    amountDue?: string
+  }
 }
 
 export default function OrderConfirmationEmail({
@@ -27,6 +34,7 @@ export default function OrderConfirmationEmail({
   pickupDate,
   pickupTime,
   itemCount = 3,
+  dropoff,
 }: OrderConfirmationEmailProps) {
   return (
     <Html>
@@ -63,15 +71,52 @@ export default function OrderConfirmationEmail({
                 <Text style={orderValue}>{pickupDate} at {pickupTime}</Text>
               </>
             )}
+
+            {dropoff && (
+              <>
+                <Hr style={hr} />
+                <Text style={orderLabel}>Drop your items off at</Text>
+                <Text style={orderValue}>{dropoff.address}</Text>
+                <Text style={orderValue}>{dropoff.hours}</Text>
+                {dropoff.date && (
+                  <>
+                    <Hr style={hr} />
+                    <Text style={orderLabel}>You told us you'd come in on</Text>
+                    <Text style={orderValue}>{dropoff.date}</Text>
+                  </>
+                )}
+                {dropoff.amountDue && (
+                  <>
+                    <Hr style={hr} />
+                    <Text style={orderLabel}>To pay at the counter</Text>
+                    <Text style={orderValue}>{dropoff.amountDue}</Text>
+                  </>
+                )}
+              </>
+            )}
           </Section>
 
           <Section style={nextSteps}>
             <Heading as="h2" style={h2}>What happens next?</Heading>
-            <Text style={stepText}>1. A runner will be assigned to your order</Text>
-            <Text style={stepText}>2. They'll collect your items at the scheduled time</Text>
-            <Text style={stepText}>3. Your measurements will be taken (if needed)</Text>
-            <Text style={stepText}>4. Our expert tailors will work their magic</Text>
-            <Text style={stepText}>5. Your items will be delivered back to you</Text>
+            {dropoff ? (
+              <>
+                <Text style={stepText}>1. Bring your items to the address above</Text>
+                <Text style={stepText}>2. We'll take your measurements at the counter</Text>
+                {dropoff.amountDue && (
+                  <Text style={stepText}>3. Pay by cash or card when you drop off</Text>
+                )}
+                <Text style={stepText}>4. Our expert tailors will work their magic</Text>
+                <Text style={stepText}>5. We'll let you know when they're ready to collect</Text>
+              </>
+            ) : (
+              <>
+                <Text style={stepText}>1. A runner will be assigned to your order</Text>
+                <Text style={stepText}>2. They'll collect your items at the scheduled time</Text>
+                <Text style={stepText}>3. Your measurements will be taken (if needed)</Text>
+                <Text style={stepText}>4. Our expert tailors will work their magic</Text>
+                <Text style={stepText}>5. Your items will be delivered back to you</Text>
+              </>
+            )}
           </Section>
 
           <Button

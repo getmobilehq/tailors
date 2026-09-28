@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       .eq('id', orderId)
       .is('runner_id', null) // Only if not already assigned
       .eq('status', 'booked')
+      .eq('fulfilment_type', 'pickup') // Never a drop-off order
 
     if (error) {
       throw error

@@ -71,7 +71,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                   Placed {formatDateTime(order.created_at)}
                 </p>
               </div>
-              <StatusBadge status={order.status} />
+              <StatusBadge status={order.status} fulfilment={order.fulfilment_type} />
             </div>
           </CardHeader>
         </Card>
@@ -214,16 +214,21 @@ export default async function OrderDetailPage({ params }: { params: { id: string
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <MapPin className="h-5 w-5" />
-                  Address
+                  {order.fulfilment_type === 'dropoff' ? 'Drop-off order' : 'Address'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{order.customer_address.line1}</p>
-                {order.customer_address.line2 && (
-                  <p className="text-sm">{order.customer_address.line2}</p>
+                {!order.customer_address && (
+                  <p className="text-sm text-muted-foreground">
+                    No address - the customer drops these off and collects them in person.
+                  </p>
+                )}
+                <p className="text-sm">{order.customer_address?.line1}</p>
+                {order.customer_address?.line2 && (
+                  <p className="text-sm">{order.customer_address?.line2}</p>
                 )}
                 <p className="text-sm">
-                  {order.customer_address.city} {order.customer_address.postcode}
+                  {order.customer_address?.city} {order.customer_address?.postcode}
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
                   {order.customer_phone}

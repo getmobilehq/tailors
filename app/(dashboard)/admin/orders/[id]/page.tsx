@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/orders/status-badge'
+import { DropoffActions } from '@/components/orders/dropoff-actions'
 import { AdminOrderActions } from '@/components/admin/admin-order-actions'
 import { OrderTimeline } from '@/components/orders/order-timeline'
 import { OrderMessages } from '@/components/orders/order-messages'
@@ -94,7 +95,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                   Placed {formatDateTime(order.created_at)}
                 </p>
               </div>
-              <StatusBadge status={order.status} />
+              <StatusBadge status={order.status} fulfilment={order.fulfilment_type} />
             </div>
           </CardHeader>
         </Card>
@@ -297,21 +298,28 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               </CardContent>
             </Card>
 
+            <DropoffActions order={order as any} />
+
             {/* Address */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <MapPin className="h-5 w-5" />
-                  Address
+                  {order.fulfilment_type === 'dropoff' ? 'Drop-off order' : 'Address'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{order.customer_address.line1}</p>
-                {order.customer_address.line2 && (
-                  <p className="text-sm">{order.customer_address.line2}</p>
+                {!order.customer_address && (
+                  <p className="text-sm text-muted-foreground">
+                    No address - the customer drops these off and collects them in person.
+                  </p>
+                )}
+                <p className="text-sm">{order.customer_address?.line1}</p>
+                {order.customer_address?.line2 && (
+                  <p className="text-sm">{order.customer_address?.line2}</p>
                 )}
                 <p className="text-sm">
-                  {order.customer_address.city} {order.customer_address.postcode}
+                  {order.customer_address?.city} {order.customer_address?.postcode}
                 </p>
               </CardContent>
             </Card>

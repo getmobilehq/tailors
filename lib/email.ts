@@ -31,6 +31,12 @@ interface OrderConfirmationData {
   pickupDate?: string
   pickupTime?: string
   itemCount: number
+  dropoff?: {
+    date?: string
+    address: string
+    hours: string
+    amountDue?: string
+  }
 }
 
 interface OrderStatusUpdateData {
@@ -53,6 +59,7 @@ export async function sendOrderConfirmation(data: OrderConfirmationData) {
         pickupDate: data.pickupDate,
         pickupTime: data.pickupTime,
         itemCount: data.itemCount,
+        dropoff: data.dropoff,
       })
     )
 

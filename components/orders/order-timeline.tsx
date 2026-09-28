@@ -22,10 +22,15 @@ const statusConfig: Record<OrderStatus, {
   icon: any
   description: string
 }> = {
+  pending_payment: {
+    label: 'Awaiting Payment',
+    icon: Clock,
+    description: 'Your order is waiting for payment to go through'
+  },
   booked: {
     label: 'Order Placed',
     icon: CheckCircle2,
-    description: 'Your order has been confirmed and paid'
+    description: 'Your order has been confirmed'
   },
   pickup_scheduled: {
     label: 'Pickup Scheduled',

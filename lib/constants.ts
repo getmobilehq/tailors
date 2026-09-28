@@ -23,6 +23,7 @@ export const SERVICE_CATEGORIES = [
 ] as const
 
 export const ORDER_STATUSES = {
+  pending_payment: { label: 'Awaiting Payment', color: 'booking', phase: 'booking' },
   booked: { label: 'Booked', color: 'booking', phase: 'booking' },
   pickup_scheduled: { label: 'Pickup Scheduled', color: 'pickup', phase: 'pickup' },
   collected: { label: 'Collected', color: 'pickup', phase: 'pickup' },

@@ -4,10 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCart } from '@/hooks/use-cart'
 import { formatPrice } from '@/lib/utils'
 import { ShoppingBag } from 'lucide-react'
-import { DELIVERY_FEE } from '@/lib/constants'
+import { deliveryFeeFor } from '@/lib/fulfilment'
+import type { FulfilmentType } from '@/lib/types'
 
-export function CartSummary() {
-  const { items, subtotal, total } = useCart()
+export function CartSummary({ fulfilment = 'pickup' }: { fulfilment?: FulfilmentType }) {
+  const { items, subtotal } = useCart()
+  const deliveryFee = deliveryFeeFor(fulfilment)
+  const orderTotal = subtotal() + deliveryFee
 
   if (items.length === 0) {
     return null
@@ -44,12 +47,16 @@ export function CartSummary() {
             <span>{formatPrice(subtotal())}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>Pickup & Delivery</span>
-            <span>{formatPrice(DELIVERY_FEE)}</span>
+            <span>Pickup &amp; Delivery</span>
+            {deliveryFee === 0 ? (
+              <span className="text-muted-foreground">Free (drop-off)</span>
+            ) : (
+              <span>{formatPrice(deliveryFee)}</span>
+            )}
           </div>
           <div className="flex justify-between font-bold text-lg pt-2 border-t">
             <span>Total</span>
-            <span className="text-primary">{formatPrice(total())}</span>
+            <span className="text-primary">{formatPrice(orderTotal)}</span>
           </div>
         </div>
       </CardContent>

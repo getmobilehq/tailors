@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Settings, Save, DollarSign, MapPin, Clock, Phone } from 'lucide-react'
+import { Settings, Save, DollarSign, MapPin, Clock, Phone, Store } from 'lucide-react'
+import type { DropoffLocation } from '@/lib/types'
 import { Badge } from '@/components/ui/badge'
 
 interface SiteSetting {
@@ -26,6 +27,16 @@ export default function SiteSettingsPage() {
   const [contactEmail, setContactEmail] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [businessHours, setBusinessHours] = useState<Record<string, string>>({})
+  const [dropoff, setDropoff] = useState<DropoffLocation>({
+    enabled: false,
+    name: 'TailorSpace',
+    line1: '',
+    line2: '',
+    city: 'Nottingham',
+    postcode: '',
+    hours: 'Mon-Sat, 9:00am - 6:00pm',
+    instructions: '',
+  })
 
   useEffect(() => {
     loadSettings()
@@ -50,6 +61,8 @@ export default function SiteSettingsPage() {
             setContactPhone(setting.value.phone)
           } else if (setting.key === 'business_hours') {
             setBusinessHours(setting.value)
+          } else if (setting.key === 'dropoff_location') {
+            setDropoff((current) => ({ ...current, ...setting.value }))
           }
         })
       }
@@ -107,6 +120,17 @@ export default function SiteSettingsPage() {
       'contact_info',
       { email: contactEmail, phone: contactPhone, address: 'Nottingham, UK' },
       'Contact information',
+      'business'
+    )
+  }
+
+  async function saveDropoffLocation(enabled: boolean) {
+    const next = { ...dropoff, enabled }
+    setDropoff(next)
+    await saveSetting(
+      'dropoff_location',
+      next,
+      'Where drop-off customers bring their items',
       'business'
     )
   }
@@ -257,6 +281,122 @@ export default function SiteSettingsPage() {
                 {saving === 'contact_info' ? 'Saving...' : 'Save Contact Info'}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Drop-off Location */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Store className="h-5 w-5" />
+              <CardTitle>Drop-off Point</CardTitle>
+            </div>
+            <CardDescription>
+              Where customers bring items themselves. They pay no delivery fee and can
+              pay at the counter. Customers only see this once it is switched on.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="font-medium">
+                  {dropoff.enabled ? 'Drop-off is offered at checkout' : 'Drop-off is switched off'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {dropoff.line1 && dropoff.postcode
+                    ? 'The address below is shown to customers.'
+                    : 'Add a street address and postcode before switching it on.'}
+                </p>
+              </div>
+              <Button
+                variant={dropoff.enabled ? 'outline' : 'default'}
+                disabled={
+                  saving === 'dropoff_location' ||
+                  (!dropoff.enabled && (!dropoff.line1.trim() || !dropoff.postcode.trim()))
+                }
+                onClick={() => saveDropoffLocation(!dropoff.enabled)}
+              >
+                {dropoff.enabled ? 'Switch off' : 'Switch on'}
+              </Button>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="dropoff-name">Location name</Label>
+                <Input
+                  id="dropoff-name"
+                  className="mt-2"
+                  value={dropoff.name}
+                  onChange={(e) => setDropoff({ ...dropoff, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dropoff-postcode">Postcode</Label>
+                <Input
+                  id="dropoff-postcode"
+                  className="mt-2"
+                  placeholder="NG1 1AA"
+                  value={dropoff.postcode}
+                  onChange={(e) => setDropoff({ ...dropoff, postcode: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dropoff-line1">Address line 1</Label>
+                <Input
+                  id="dropoff-line1"
+                  className="mt-2"
+                  placeholder="12 Example Street"
+                  value={dropoff.line1}
+                  onChange={(e) => setDropoff({ ...dropoff, line1: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dropoff-line2">Address line 2 (optional)</Label>
+                <Input
+                  id="dropoff-line2"
+                  className="mt-2"
+                  value={dropoff.line2 || ''}
+                  onChange={(e) => setDropoff({ ...dropoff, line2: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dropoff-city">City</Label>
+                <Input
+                  id="dropoff-city"
+                  className="mt-2"
+                  value={dropoff.city}
+                  onChange={(e) => setDropoff({ ...dropoff, city: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dropoff-hours">Opening hours</Label>
+                <Input
+                  id="dropoff-hours"
+                  className="mt-2"
+                  value={dropoff.hours}
+                  onChange={(e) => setDropoff({ ...dropoff, hours: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="dropoff-instructions">Instructions for customers (optional)</Label>
+              <Input
+                id="dropoff-instructions"
+                className="mt-2"
+                placeholder="Ask for the TailorSpace counter when you arrive."
+                value={dropoff.instructions || ''}
+                onChange={(e) => setDropoff({ ...dropoff, instructions: e.target.value })}
+              />
+            </div>
+
+            <Button
+              onClick={() => saveDropoffLocation(dropoff.enabled)}
+              disabled={saving === 'dropoff_location'}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving === 'dropoff_location' ? 'Saving...' : 'Save drop-off point'}
+            </Button>
           </CardContent>
         </Card>
 

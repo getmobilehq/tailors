@@ -66,6 +66,8 @@ export default async function RunnerDashboardPage() {
     `)
     .is('runner_id', null)
     .eq('status', 'booked')
+    // Drop-off orders have no pickup or delivery leg for a runner to do
+    .eq('fulfilment_type', 'pickup')
     .order('pickup_date', { ascending: true })
     .limit(20)
 
@@ -115,8 +117,8 @@ export default async function RunnerDashboardPage() {
       order_number: order.order_number,
       type: (order.status === 'pickup_scheduled' ? 'pickup' : 'delivery') as 'pickup' | 'delivery',
       customer_name: order.customer?.full_name || 'Unknown',
-      address: `${order.customer_address.line1}${order.customer_address.line2 ? ', ' + order.customer_address.line2 : ''}`,
-      postcode: order.customer_address.postcode,
+      address: `${order.customer_address?.line1}${order.customer_address?.line2 ? ', ' + order.customer_address?.line2 : ''}`,
+      postcode: order.customer_address?.postcode,
       item_count: order.items?.length || 0,
       time_window: order.pickup_slot || 'Not scheduled',
       pickup_date: order.pickup_date,
@@ -129,8 +131,8 @@ export default async function RunnerDashboardPage() {
       order_number: order.order_number,
       type: 'pickup' as 'pickup' | 'delivery',
       customer_name: order.customer?.full_name || 'Unknown',
-      address: `${order.customer_address.line1}${order.customer_address.line2 ? ', ' + order.customer_address.line2 : ''}`,
-      postcode: order.customer_address.postcode,
+      address: `${order.customer_address?.line1}${order.customer_address?.line2 ? ', ' + order.customer_address?.line2 : ''}`,
+      postcode: order.customer_address?.postcode,
       item_count: order.items?.length || 0,
       time_window: order.pickup_slot || 'Not scheduled',
       pickup_date: order.pickup_date,

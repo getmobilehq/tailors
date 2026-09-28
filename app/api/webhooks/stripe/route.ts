@@ -46,7 +46,12 @@ export async function POST(req: NextRequest) {
       // Update order status from pending_payment to booked
       const { error: orderError } = await supabase
         .from('orders')
-        .update({ status: 'booked' })
+        .update({
+          status: 'booked',
+          payment_status: 'paid',
+          paid_method: 'stripe',
+          paid_at: new Date().toISOString(),
+        })
         .eq('id', orderId)
 
       if (orderError) {

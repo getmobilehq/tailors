@@ -111,6 +111,21 @@ export and holds docs only. The application code lives in `app/`, `components/`,
 4. **Checkout** (`/book/checkout`) - Enter address, Stripe payment
 5. **Success** (`/book/success`) - Confirmation
 
+### Fulfilment Types
+
+Orders are either a runner **pickup** (the original flow) or a customer
+**dropoff** (`orders.fulfilment_type`). Drop-off orders:
+- carry no delivery fee, and never appear in the runner queue
+- have a null `customer_address` - always read it with `?.`
+- may be paid at the counter (`payment_method: 'in_person'`), which skips Stripe
+  and confirms the order immediately as `booked` and `payment_status: 'unpaid'`
+- reuse `collected` ("Received") and `completed` ("Collected by customer") rather
+  than adding statuses, so existing status maps keep working
+
+Fee, validation and status wording live in `/lib/fulfilment.ts` (unit tested).
+The drop-off address is the `dropoff_location` row in `site_settings`, edited in
+Admin -> Settings, and hidden from customers until it is filled in and enabled.
+
 ### Order Lifecycle
 
 **Order statuses** (see `/lib/types.ts`):
@@ -127,6 +142,8 @@ export and holds docs only. The application code lives in `app/`, `components/`,
 - `/api/checkout` - Creates Stripe checkout session
 - `/api/webhooks/stripe` - Handles Stripe webhook (checkout.session.completed)
 - `/api/webhooks/resend` - Reports bounced/failed/complained/delayed emails to Sentry (needs `RESEND_WEBHOOK_SECRET`)
+- `/api/dropoff-location` - Public: the configured drop-off point, or `available: false`
+- `/api/orders/[id]/receive|mark-paid|handover` - Counter actions on drop-off orders (admin/tailor)
 - `/api/runner/accept` - Runner accepts a job
 
 ### Testing
@@ -134,7 +151,8 @@ export and holds docs only. The application code lives in `app/`, `components/`,
 **Unit tests:** `npm test` runs vitest over `lib/**/*.test.ts` — currently the
 multi-tailor payout split (`lib/tailor-payout.ts`), the item-to-tailor picker
 (`lib/tailor-assignment-core.ts`), email send-failure handling (`lib/email.ts`, with
-Resend mocked) and the rate limiter. No database or env vars needed.
+Resend mocked), the rate limiter, and drop-off fees/validation (`lib/fulfilment.ts`).
+No database or env vars needed.
 
 **Stripe test cards:**
 - Success: 4242 4242 4242 4242

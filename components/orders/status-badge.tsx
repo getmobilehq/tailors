@@ -1,10 +1,13 @@
 import { Badge } from '@/components/ui/badge'
 import { ORDER_STATUSES } from '@/lib/constants'
-import type { OrderStatus } from '@/lib/types'
+import { statusLabelFor } from '@/lib/fulfilment'
+import type { FulfilmentType, OrderStatus } from '@/lib/types'
 
 interface StatusBadgeProps {
   status: OrderStatus
   showIcon?: boolean
+  /** Drop-off orders reuse 'collected'/'completed' with different wording */
+  fulfilment?: FulfilmentType
 }
 
 // Phase icons based on branding guide
@@ -18,7 +21,7 @@ const PHASE_ICONS: Record<string, string> = {
   cancelled: '❌',
 }
 
-export function StatusBadge({ status, showIcon = false }: StatusBadgeProps) {
+export function StatusBadge({ status, showIcon = false, fulfilment = 'pickup' }: StatusBadgeProps) {
   const config = ORDER_STATUSES[status]
 
   if (!config) return null
@@ -40,7 +43,7 @@ export function StatusBadge({ status, showIcon = false }: StatusBadgeProps) {
   return (
     <Badge variant={variant as any}>
       {showIcon && icon && <span className="mr-1">{icon}</span>}
-      {config.label}
+      {statusLabelFor(status, fulfilment, config.label)}
     </Badge>
   )
 }

@@ -1,6 +1,7 @@
 export type UserRole = 'customer' | 'runner' | 'tailor' | 'admin'
 
 export type OrderStatus = 
+  | 'pending_payment'
   | 'booked' 
   | 'pickup_scheduled' 
   | 'collected' 
@@ -12,6 +13,28 @@ export type OrderStatus =
   | 'cancelled'
 
 export type PickupSlot = 'morning' | 'afternoon' | 'evening'
+
+/** How the items reach us and go back: runner pickup, or customer drop-off. */
+export type FulfilmentType = 'pickup' | 'dropoff'
+
+/** Card online at checkout, or cash/card at the counter on drop-off. */
+export type PaymentMethod = 'online' | 'in_person'
+
+export type PaymentStatus = 'unpaid' | 'paid' | 'refunded'
+
+export type PaidMethod = 'cash' | 'card' | 'stripe'
+
+/** site_settings key 'dropoff_location' - where drop-off customers bring items. */
+export interface DropoffLocation {
+  enabled: boolean
+  name: string
+  line1: string
+  line2?: string
+  city: string
+  postcode: string
+  hours: string
+  instructions?: string
+}
 
 export interface User {
   id: string
@@ -66,11 +89,19 @@ export interface Order {
   subtotal: number
   delivery_fee: number
   total: number
-  customer_address: Address
+  customer_address: Address | null
   customer_phone: string
   customer_notes: string | null
+  fulfilment_type: FulfilmentType
+  payment_method: PaymentMethod
+  payment_status: PaymentStatus
+  paid_at: string | null
+  paid_method: PaidMethod | null
+  paid_by: string | null
   pickup_date: string | null
   pickup_slot: PickupSlot | null
+  dropoff_date: string | null
+  dropped_off_at: string | null
   estimated_completion: string | null
   measurements: Record<string, number> | null
   runner_notes: string | null

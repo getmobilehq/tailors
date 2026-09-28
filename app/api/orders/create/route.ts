@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/request'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { DELIVERY_FEE } from '@/lib/constants'
+import {
+  deliveryFeeFor,
+  formatDropoffAddress,
+  initialStatusFor,
+  isDropoffAvailable,
+  orderTotal,
+  validateOrderDetails,
+} from '@/lib/fulfilment'
+import { sendOrderConfirmation } from '@/lib/email'
+import { formatPrice } from '@/lib/utils'
+import type { DropoffLocation } from '@/lib/types'
+import type { FulfilmentType, PaymentMethod } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,7 +46,10 @@ export async function POST(req: NextRequest) {
       }, { status: 403 })
     }
 
-    const { items, address, phone, notes, pickupDate, pickupSlot } = await req.json()
+    const body = await req.json()
+    const { items, address, phone, notes, pickupDate, pickupSlot, dropoffDate } = body
+    const fulfilment: FulfilmentType = body.fulfilment === 'dropoff' ? 'dropoff' : 'pickup'
+    const paymentMethod: PaymentMethod = body.paymentMethod === 'in_person' ? 'in_person' : 'online'
 
     console.log('[ORDER CREATE] Request data:', {
       itemCount: items?.length,
@@ -50,15 +64,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No items in order' }, { status: 400 })
     }
 
-    if (!address || !phone || !pickupDate || !pickupSlot) {
-      return NextResponse.json({ error: 'Missing required order details' }, { status: 400 })
+    const detailsError = validateOrderDetails({
+      fulfilment,
+      paymentMethod,
+      address,
+      phone,
+      pickupDate,
+      pickupSlot,
+      dropoffDate,
+    })
+
+    if (detailsError) {
+      return NextResponse.json({ error: detailsError }, { status: 400 })
     }
 
     // Calculate totals (prices are in pounds as DECIMAL after migration)
     const subtotal = items.reduce((sum: number, item: any) =>
       sum + (item.service.price * item.quantity), 0
     )
-    const total = subtotal + DELIVERY_FEE
+    const deliveryFee = deliveryFeeFor(fulfilment)
+    const total = orderTotal(subtotal, fulfilment)
 
     console.log('[ORDER CREATE] Calculated totals - Subtotal:', subtotal, 'Total:', total)
 
@@ -75,15 +100,19 @@ export async function POST(req: NextRequest) {
       .insert({
         order_number: orderNumber,
         customer_id: user.id,
-        status: 'pending_payment',
+        status: initialStatusFor(paymentMethod),
         subtotal,
-        delivery_fee: DELIVERY_FEE,
+        delivery_fee: deliveryFee,
         total,
-        customer_address: address,
+        fulfilment_type: fulfilment,
+        payment_method: paymentMethod,
+        payment_status: 'unpaid',
+        customer_address: fulfilment === 'dropoff' ? null : address,
         customer_phone: phone,
         customer_notes: notes || null,
-        pickup_date: pickupDate,
-        pickup_slot: pickupSlot,
+        pickup_date: fulfilment === 'dropoff' ? null : pickupDate,
+        pickup_slot: fulfilment === 'dropoff' ? null : pickupSlot,
+        dropoff_date: fulfilment === 'dropoff' ? dropoffDate : null,
       })
       .select()
       .single()
@@ -137,10 +166,52 @@ export async function POST(req: NextRequest) {
 
     console.log('[ORDER CREATE] Order items created successfully')
 
+    // Online orders are confirmed by the Stripe webhook, which sends the email.
+    // A pay-at-the-counter order never goes near Stripe, so send it here.
+    if (paymentMethod === 'in_person') {
+      const { data: setting } = await adminClient
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'dropoff_location')
+        .maybeSingle()
+
+      const location = (setting?.value ?? null) as DropoffLocation | null
+
+      const emailResult = await sendOrderConfirmation({
+        to: profile.email,
+        customerName: profile.full_name,
+        orderNumber,
+        orderTotal: formatPrice(total),
+        itemCount: items.length,
+        dropoff: isDropoffAvailable(location)
+          ? {
+              date: dropoffDate
+                ? new Date(dropoffDate).toLocaleDateString('en-GB', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                  })
+                : undefined,
+              address: formatDropoffAddress(location!),
+              hours: location!.hours,
+              amountDue: formatPrice(total),
+            }
+          : undefined,
+      })
+
+      // The order stands even if the email fails; the customer still sees the
+      // confirmation screen and the order in their account.
+      if (!emailResult.success) {
+        console.error('[ORDER CREATE] Confirmation email failed:', emailResult.error)
+      }
+    }
+
     return NextResponse.json({
       orderId: order.id,
       orderNumber: order.order_number,
-      total
+      total,
+      // Pay-in-person orders are already confirmed; the client skips Stripe
+      requiresPayment: paymentMethod === 'online',
     })
   } catch (error: any) {
     console.error('[ORDER CREATE] Unexpected error:', error)

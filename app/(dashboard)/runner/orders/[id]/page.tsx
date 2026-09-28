@@ -58,7 +58,8 @@ export default async function RunnerOrderPage({ params }: { params: { id: string
     .order('created_at', { ascending: true })
 
   const pickupSlot = PICKUP_SLOTS.find(s => s.id === order.pickup_slot)
-  const canAccept = order.status === 'booked' && !order.runner_id
+  const canAccept =
+    order.status === 'booked' && !order.runner_id && order.fulfilment_type === 'pickup'
   const isAssigned = order.runner_id === user.id
 
   // Group items by tailor so the runner sees one stop per tailor.
@@ -304,21 +305,26 @@ export default async function RunnerOrderPage({ params }: { params: { id: string
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <MapPin className="h-5 w-5" />
-                  Address
+                  {order.fulfilment_type === 'dropoff' ? 'Drop-off order' : 'Address'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{order.customer_address.line1}</p>
-                {order.customer_address.line2 && (
-                  <p className="text-sm">{order.customer_address.line2}</p>
+                {!order.customer_address && (
+                  <p className="text-sm text-muted-foreground">
+                    No address - the customer drops these off and collects them in person.
+                  </p>
+                )}
+                <p className="text-sm">{order.customer_address?.line1}</p>
+                {order.customer_address?.line2 && (
+                  <p className="text-sm">{order.customer_address?.line2}</p>
                 )}
                 <p className="text-sm mb-3">
-                  {order.customer_address.city} {order.customer_address.postcode}
+                  {order.customer_address?.city} {order.customer_address?.postcode}
                 </p>
                 <Button asChild variant="outline" size="sm" className="w-full">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      `${order.customer_address.line1}, ${order.customer_address.city}, ${order.customer_address.postcode}`
+                      `${order.customer_address?.line1}, ${order.customer_address?.city}, ${order.customer_address?.postcode}`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
