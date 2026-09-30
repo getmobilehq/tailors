@@ -11,10 +11,12 @@ import { useCart } from '@/hooks/use-cart'
 export default function SuccessContent({
   sessionId,
   orderNumber,
+  orderId,
   payAtDropoff = false,
 }: {
   sessionId?: string
   orderNumber?: string
+  orderId?: string
   payAtDropoff?: boolean
 }) {
   const router = useRouter()
@@ -66,7 +68,9 @@ export default function SuccessContent({
 
           <div className="space-y-3">
             <Button asChild size="lg" className="w-full">
-              <Link href="/orders">View My Orders</Link>
+              <Link href={orderId ? `/orders/${orderId}` : '/orders'}>
+                {orderId ? 'View Your Order' : 'View My Orders'}
+              </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full">
               <Link href="/">Return Home</Link>

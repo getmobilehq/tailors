@@ -36,7 +36,7 @@ export default function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const recoveryOrderId = searchParams.get('recover')
-  const { items, clearCart } = useCart()
+  const { items } = useCart()
   const [loading, setLoading] = useState(false)
   const [pickupInfo, setPickupInfo] = useState({ date: '', slot: '' })
   const [fulfilment, setFulfilment] = useState<FulfilmentType>('pickup')
@@ -335,10 +335,14 @@ export default function CheckoutContent() {
       // Paying at the counter: the order is already confirmed, so there is no
       // Stripe session to send them to.
       if (!orderData.requiresPayment) {
-        clearCart()
-        localStorage.removeItem('fulfilment_type')
-        localStorage.removeItem('dropoff_date')
-        router.push(`/book/success?order=${orderData.orderNumber}&unpaid=1`)
+        // Don't clear the cart here. This page redirects to /book whenever the
+        // cart is empty, and that guard would fire before the navigation below
+        // lands. The success page clears the cart and the booking keys instead.
+        toast.success('Order confirmed')
+        router.push(
+          `/book/success?order=${encodeURIComponent(orderData.orderNumber)}` +
+            `&id=${orderData.orderId}&unpaid=1`
+        )
         return
       }
 
