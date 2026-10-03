@@ -13,8 +13,8 @@ export default function AboutPage() {
             About TailorSpace
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            We're revolutionizing clothing alterations in Nottingham with our convenient,
-            door-to-door service that connects you with expert tailors.
+            We're revolutionizing clothing alterations across the UK with a convenient
+            service that connects you with expert tailors, by post or at your door.
           </p>
         </div>
       </section>

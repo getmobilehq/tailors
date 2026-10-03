@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Settings, Save, DollarSign, MapPin, Clock, Phone, Store } from 'lucide-react'
+import { Settings, Save, DollarSign, MapPin, Clock, Phone, Store, Mail } from 'lucide-react'
 import type { DropoffLocation } from '@/lib/types'
 import { Badge } from '@/components/ui/badge'
 
@@ -27,8 +27,10 @@ export default function SiteSettingsPage() {
   const [contactEmail, setContactEmail] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [businessHours, setBusinessHours] = useState<Record<string, string>>({})
+  const [returnPostageFee, setReturnPostageFee] = useState('')
   const [dropoff, setDropoff] = useState<DropoffLocation>({
     enabled: false,
+    postalEnabled: false,
     name: 'TailorSpace',
     line1: '',
     line2: '',
@@ -61,6 +63,8 @@ export default function SiteSettingsPage() {
             setContactPhone(setting.value.phone)
           } else if (setting.key === 'business_hours') {
             setBusinessHours(setting.value)
+          } else if (setting.key === 'return_postage_fee') {
+            setReturnPostageFee(setting.value.amount?.toString() ?? '')
           } else if (setting.key === 'dropoff_location') {
             setDropoff((current) => ({ ...current, ...setting.value }))
           }
@@ -124,13 +128,21 @@ export default function SiteSettingsPage() {
     )
   }
 
-  async function saveDropoffLocation(enabled: boolean) {
-    const next = { ...dropoff, enabled }
+  async function saveReturnPostageFee() {
+    await saveSetting(
+      'return_postage_fee',
+      { amount: parseFloat(returnPostageFee), currency: 'GBP' },
+      'Flat Royal Mail fee charged to post finished items back to postal customers',
+      'pricing'
+    )
+  }
+
+  async function saveDropoffLocation(next: DropoffLocation) {
     setDropoff(next)
     await saveSetting(
       'dropoff_location',
       next,
-      'Where drop-off customers bring their items',
+      'Where drop-off customers bring their items and postal customers send them',
       'business'
     )
   }
@@ -147,6 +159,8 @@ export default function SiteSettingsPage() {
   const handleBusinessHourChange = (day: string, value: string) => {
     setBusinessHours(prev => ({ ...prev, [day]: value }))
   }
+
+  const addressReady = Boolean(dropoff.line1.trim() && dropoff.postcode.trim())
 
   if (loading) {
     return (
@@ -289,11 +303,12 @@ export default function SiteSettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Store className="h-5 w-5" />
-              <CardTitle>Drop-off Point</CardTitle>
+              <CardTitle>Drop-off &amp; Postal</CardTitle>
             </div>
             <CardDescription>
-              Where customers bring items themselves. They pay no delivery fee and can
-              pay at the counter. Customers only see this once it is switched on.
+              One address for customers who bring items in and for those who post them.
+              Each option is switched on separately, and neither appears at checkout
+              until the address below is filled in.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -310,14 +325,60 @@ export default function SiteSettingsPage() {
               </div>
               <Button
                 variant={dropoff.enabled ? 'outline' : 'default'}
-                disabled={
-                  saving === 'dropoff_location' ||
-                  (!dropoff.enabled && (!dropoff.line1.trim() || !dropoff.postcode.trim()))
-                }
-                onClick={() => saveDropoffLocation(!dropoff.enabled)}
+                disabled={saving === 'dropoff_location' || !addressReady}
+                onClick={() => saveDropoffLocation({ ...dropoff, enabled: !dropoff.enabled })}
               >
                 {dropoff.enabled ? 'Switch off' : 'Switch on'}
               </Button>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="font-medium flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  {dropoff.postalEnabled
+                    ? 'Postal orders accepted UK-wide'
+                    : 'Postal orders are switched off'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Customers anywhere in the UK post items to this address and pay Royal
+                  Mail return postage at checkout.
+                </p>
+              </div>
+              <Button
+                variant={dropoff.postalEnabled ? 'outline' : 'default'}
+                disabled={saving === 'dropoff_location' || !addressReady}
+                onClick={() =>
+                  saveDropoffLocation({ ...dropoff, postalEnabled: !dropoff.postalEnabled })
+                }
+              >
+                {dropoff.postalEnabled ? 'Switch off' : 'Switch on'}
+              </Button>
+            </div>
+
+            <div>
+              <Label htmlFor="return-postage">Return postage fee (GBP)</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  id="return-postage"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="4.99"
+                  value={returnPostageFee}
+                  onChange={(e) => setReturnPostageFee(e.target.value)}
+                />
+                <Button
+                  onClick={saveReturnPostageFee}
+                  disabled={saving === 'return_postage_fee' || !returnPostageFee}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving === 'return_postage_fee' ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Charged on postal orders in place of the delivery fee. Drop-off stays free.
+              </p>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
@@ -391,7 +452,7 @@ export default function SiteSettingsPage() {
             </div>
 
             <Button
-              onClick={() => saveDropoffLocation(dropoff.enabled)}
+              onClick={() => saveDropoffLocation(dropoff)}
               disabled={saving === 'dropoff_location'}
             >
               <Save className="h-4 w-4 mr-2" />

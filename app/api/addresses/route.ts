@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import type { SavedAddress } from '@/lib/types'
+import { isValidUkPostcode } from '@/lib/fulfilment'
 
 // GET - Fetch all addresses for the authenticated user
 export async function GET() {
@@ -54,10 +55,12 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate Nottingham postcode
-    if (!postcode.toUpperCase().startsWith('NG')) {
+    // Any UK postcode: saved addresses are return addresses for postal orders
+    // too, and those customers are nationwide. Runner pickup is still limited
+    // to the NG area, enforced per order in validateOrderDetails.
+    if (!isValidUkPostcode(postcode)) {
       return NextResponse.json(
-        { error: 'We currently only serve Nottingham postcodes (NG)' },
+        { error: 'Please enter a valid UK postcode' },
         { status: 400 }
       )
     }
@@ -110,10 +113,12 @@ export async function PUT(request: Request) {
       )
     }
 
-    // Validate Nottingham postcode
-    if (!postcode.toUpperCase().startsWith('NG')) {
+    // Any UK postcode: saved addresses are return addresses for postal orders
+    // too, and those customers are nationwide. Runner pickup is still limited
+    // to the NG area, enforced per order in validateOrderDetails.
+    if (!isValidUkPostcode(postcode)) {
       return NextResponse.json(
-        { error: 'We currently only serve Nottingham postcodes (NG)' },
+        { error: 'Please enter a valid UK postcode' },
         { status: 400 }
       )
     }

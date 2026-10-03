@@ -5,8 +5,8 @@ import { CheckCircle, Clock, MapPin, Shield } from 'lucide-react'
 import { TeamCards } from '@/components/marketing/team-cards'
 
 export const metadata = {
-  title: 'TailorSpace - Expert Alterations Delivered to Your Door | Nottingham',
-  description: 'Book clothing alterations online in Nottingham. Expert collection, professional tailoring, and delivery to your door. Fixed prices from £2. Just £7 pickup & delivery.',
+  title: 'TailorSpace - Expert Clothing Alterations Across the UK',
+  description: 'Book clothing alterations online anywhere in the UK. Post your items to us, or get doorstep collection and delivery in Nottingham. Fixed prices from £2.',
 }
 
 export default function HomePage() {
@@ -51,10 +51,17 @@ export default function HomePage() {
       'https://facebook.com/tailorspace',
       'https://instagram.com/tailorspace',
     ],
-    areaServed: {
-      '@type': 'City',
-      name: 'Nottingham',
-    },
+    areaServed: [
+      // Postal orders are taken UK-wide; runner collection is Nottingham only
+      {
+        '@type': 'Country',
+        name: 'United Kingdom',
+      },
+      {
+        '@type': 'City',
+        name: 'Nottingham',
+      },
+    ],
   }
 
   return (
@@ -89,7 +96,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5" style={{ color: 'var(--brand-primary)' }} />
-              <span>Serving Nottingham</span>
+              <span>UK-wide by post</span>
             </div>
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5" style={{ color: 'var(--actor-tailor)' }} />
@@ -249,10 +256,11 @@ export default function HomePage() {
         <div className="container max-w-3xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Ready to get started?</h2>
           <p className="text-lg mb-2 opacity-90">
-            Serving Nottingham • Fixed prices • No hidden fees
+            Anywhere in the UK • Fixed prices • No hidden fees
           </p>
           <p className="mb-8 opacity-75">
-            Collection & delivery available in NG1, NG2, NG3, NG5, NG7, NG9
+            Post your items from anywhere in the UK, or choose doorstep collection in
+            Nottingham (NG1, NG2, NG3, NG5, NG7, NG9)
           </p>
           <Button asChild size="lg" variant="secondary" className="text-lg px-8">
             <Link href="/book">Book Your First Alteration</Link>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/request'
-import { DELIVERY_FEE } from '@/lib/constants'
+import { feeLabelFor } from '@/lib/fulfilment'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
@@ -95,20 +95,30 @@ export async function POST(req: NextRequest) {
           },
           quantity: item.quantity,
         })),
-        {
-          price_data: {
-            currency: 'gbp',
-            product_data: {
-              name: 'Pickup & Delivery',
-              description: 'Expert collection and delivery to your door',
-            },
-            unit_amount: Math.round(DELIVERY_FEE * 100), // Convert pounds to pence for Stripe
-          },
-          quantity: 1,
-        },
+        // Charge the fee the order was actually priced with: £7 for a runner
+        // pickup, Royal Mail postage for a postal order, nothing for a
+        // drop-off. Using the constant here billed every order as a pickup.
+        ...(Number(order.delivery_fee) > 0
+          ? [
+              {
+                price_data: {
+                  currency: 'gbp' as const,
+                  product_data: {
+                    name: feeLabelFor(order.fulfilment_type),
+                    description:
+                      order.fulfilment_type === 'postal'
+                        ? 'Royal Mail postage for your finished items'
+                        : 'Expert collection and delivery to your door',
+                  },
+                  unit_amount: Math.round(Number(order.delivery_fee) * 100),
+                },
+                quantity: 1,
+              },
+            ]
+          : []),
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/book/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/book/success?session_id={CHECKOUT_SESSION_ID}&type=${order.fulfilment_type}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/book/checkout`,
       customer_email: user.email,
       metadata: {

@@ -13,11 +13,13 @@ export default function SuccessContent({
   orderNumber,
   orderId,
   payAtDropoff = false,
+  isPostal = false,
 }: {
   sessionId?: string
   orderNumber?: string
   orderId?: string
   payAtDropoff?: boolean
+  isPostal?: boolean
 }) {
   const router = useRouter()
   const { clearCart } = useCart()
@@ -61,9 +63,11 @@ export default function SuccessContent({
           )}
 
           <p className="text-muted-foreground mb-8">
-            {payAtDropoff
-              ? "Thank you for your order. We'll email you the details and the drop-off address. Bring your items in on the day you chose and pay at the counter."
-              : "Thank you for your order. We'll send you a confirmation email shortly with your order details. Our expert runner will arrive at your scheduled time to collect your items."}
+            {isPostal
+              ? "Thank you for your order. We've emailed you the address to post your items to. Pop a note with your order number in the parcel so we know whose items they are."
+              : payAtDropoff
+                ? "Thank you for your order. We'll email you the details and the drop-off address. Bring your items in on the day you chose and pay at the counter."
+                : "Thank you for your order. We'll send you a confirmation email shortly with your order details. Our expert runner will arrive at your scheduled time to collect your items."}
           </p>
 
           <div className="space-y-3">
@@ -81,7 +85,14 @@ export default function SuccessContent({
             <p className="font-semibold mb-2">What happens next?</p>
             <ul className="text-left space-y-1 text-muted-foreground">
               <li>✓ You'll receive an order confirmation email</li>
-              {payAtDropoff ? (
+              {isPostal ? (
+                <>
+                  <li>✓ Post your items to the address in that email</li>
+                  <li>✓ We'll let you know as soon as your parcel arrives</li>
+                  <li>✓ Our expert tailors will work their magic</li>
+                  <li>✓ We'll post them back by Royal Mail with a tracking number</li>
+                </>
+              ) : payAtDropoff ? (
                 <>
                   <li>✓ Bring your items to us on the day you chose</li>
                   <li>✓ We'll take measurements and payment at the counter</li>

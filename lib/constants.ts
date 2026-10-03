@@ -1,4 +1,8 @@
 export const DELIVERY_FEE = 7.00
+
+// Flat Royal Mail fee to post finished items back to a postal customer.
+// Overridden by the 'return_postage_fee' row in site_settings.
+export const RETURN_POSTAGE_FEE = 4.99
 export const CURRENCY = 'GBP'
 export const CURRENCY_SYMBOL = '£'
 

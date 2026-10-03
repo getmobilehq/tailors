@@ -68,8 +68,8 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold mb-1">Service Area</h3>
                   <p className="text-muted-foreground">
-                    Nottingham & Surrounding Areas<br />
-                    Postcodes: NG1, NG2, NG3, NG5, NG7, NG9
+                    Postal orders: anywhere in the UK<br />
+                    Collection &amp; delivery: NG1, NG2, NG3, NG5, NG7, NG9
                   </p>
                 </div>
               </div>

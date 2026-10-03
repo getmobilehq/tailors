@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { CartSummary } from '@/components/booking/cart-summary'
 import { useCart } from '@/hooks/use-cart'
 import { PICKUP_SLOTS } from '@/lib/constants'
-import { ArrowLeft, ArrowRight, Calendar, Clock, Car, Store } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Calendar, Clock, Car, Store, Mail } from 'lucide-react'
 import { DropoffAddress } from '@/components/booking/dropoff-address'
 import type { DropoffLocation, FulfilmentType } from '@/lib/types'
 import Link from 'next/link'
@@ -22,12 +22,18 @@ export default function ScheduleContent() {
   const [selectedSlot, setSelectedSlot] = useState('')
   const [fulfilment, setFulfilment] = useState<FulfilmentType>('pickup')
   const [dropoff, setDropoff] = useState<DropoffLocation | null>(null)
+  const [dropoffOffered, setDropoffOffered] = useState(false)
+  const [postalOffered, setPostalOffered] = useState(false)
+  const [returnPostageFee, setReturnPostageFee] = useState<number | undefined>()
 
   useEffect(() => {
     fetch('/api/dropoff-location')
       .then((res) => res.json())
       .then((data) => {
-        if (data.available) setDropoff(data.location)
+        setDropoffOffered(Boolean(data.dropoffAvailable))
+        setPostalOffered(Boolean(data.postalAvailable))
+        if (data.dropoffAvailable || data.postalAvailable) setDropoff(data.location)
+        if (typeof data.returnPostageFee === 'number') setReturnPostageFee(data.returnPostageFee)
       })
       .catch(() => {
         // Drop-off simply isn't offered if we can't load the location
@@ -35,6 +41,9 @@ export default function ScheduleContent() {
   }, [])
 
   const isDropoff = fulfilment === 'dropoff'
+  const isPostal = fulfilment === 'postal'
+  // Postal customers post whenever suits them, so there is no date to pick
+  const needsDate = !isPostal
 
   if (items.length === 0) {
     router.push('/book')
@@ -50,7 +59,7 @@ export default function ScheduleContent() {
     .slice(0, 7) // Take first 7 non-Sunday days
 
   function handleContinue() {
-    if (!selectedDate) {
+    if (needsDate && !selectedDate) {
       toast.error(isDropoff ? 'Please choose a drop-off day' : 'Please select a date and time slot')
       return
     }
@@ -64,7 +73,11 @@ export default function ScheduleContent() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('fulfilment_type', fulfilment)
 
-      if (isDropoff) {
+      if (isPostal) {
+        localStorage.removeItem('pickup_date')
+        localStorage.removeItem('pickup_slot')
+        localStorage.removeItem('dropoff_date')
+      } else if (isDropoff) {
         localStorage.setItem('dropoff_date', selectedDate)
         localStorage.removeItem('pickup_date')
         localStorage.removeItem('pickup_slot')
@@ -88,11 +101,15 @@ export default function ScheduleContent() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl mb-2">{isDropoff ? 'Schedule Drop-off' : 'Schedule Pickup'}</h1>
+          <h1 className="text-3xl mb-2">
+            {isPostal ? 'Post Your Items' : isDropoff ? 'Schedule Drop-off' : 'Schedule Pickup'}
+          </h1>
           <p className="text-muted-foreground">
-            {isDropoff
-              ? 'When will you bring your items in?'
-              : 'When should we collect your items?'}
+            {isPostal
+              ? 'Send your items to us whenever suits you'
+              : isDropoff
+                ? 'When will you bring your items in?'
+                : 'When should we collect your items?'}
           </p>
         </div>
         <Button variant="ghost" asChild>
@@ -105,13 +122,13 @@ export default function ScheduleContent() {
 
       <div className="grid lg:grid-cols-[1fr,320px] gap-8">
         <div className="space-y-6">
-          {/* Pickup or drop-off. Only shown once an admin has set up a location. */}
-          {dropoff && (
+          {/* Each option appears only once an admin has switched it on. */}
+          {(dropoffOffered || postalOffered) && (
             <Card>
               <CardHeader>
                 <CardTitle>How would you like to get your items to us?</CardTitle>
               </CardHeader>
-              <CardContent className="grid sm:grid-cols-2 gap-3">
+              <CardContent className="grid sm:grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => handleFulfilmentChange('pickup')}
@@ -127,6 +144,7 @@ export default function ScheduleContent() {
                   </div>
                 </button>
 
+                {dropoffOffered && (
                 <button
                   type="button"
                   onClick={() => handleFulfilmentChange('dropoff')}
@@ -141,25 +159,56 @@ export default function ScheduleContent() {
                     No delivery fee, and you can pay when you drop off
                   </div>
                 </button>
+                )}
+
+                {postalOffered && (
+                <button
+                  type="button"
+                  onClick={() => handleFulfilmentChange('postal')}
+                  className={cn(
+                    'p-4 rounded-lg border-2 text-left transition-all hover:shadow-md',
+                    isPostal ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                  )}
+                >
+                  <Mail className="h-5 w-5 mb-2 text-primary" />
+                  <div className="font-semibold mb-1">Post them to us</div>
+                  <div className="text-sm text-muted-foreground">
+                    Anywhere in the UK. We post them back by Royal Mail
+                  </div>
+                </button>
+                )}
               </CardContent>
             </Card>
           )}
 
-          {isDropoff && dropoff && (
+          {(isDropoff || isPostal) && dropoff && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Store className="h-5 w-5" />
-                  Where to bring your items
+                  {isPostal ? <Mail className="h-5 w-5" /> : <Store className="h-5 w-5" />}
+                  {isPostal ? 'Where to post your items' : 'Where to bring your items'}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <DropoffAddress location={dropoff} />
+                {isPostal && (
+                  <div className="text-sm text-muted-foreground space-y-2">
+                    <p>
+                      Send them with Royal Mail or any courier you like - that postage is
+                      yours to arrange and pay for. We recommend a tracked service.
+                    </p>
+                    <p>
+                      Pop a note in the parcel with your order number so we know whose
+                      items they are. You'll get the order number on the next screen.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
 
-          {/* Date Selection */}
+          {/* Date Selection - postal customers post whenever they like */}
+          {needsDate && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -196,9 +245,10 @@ export default function ScheduleContent() {
               </div>
             </CardContent>
           </Card>
+          )}
 
           {/* Time slots are a runner's route plan - drop-off just needs a day */}
-          {!isDropoff && (
+          {!isDropoff && !isPostal && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -234,12 +284,12 @@ export default function ScheduleContent() {
         </div>
 
         <div className="lg:sticky lg:top-4 h-fit space-y-4">
-          <CartSummary fulfilment={fulfilment} />
+          <CartSummary fulfilment={fulfilment} returnPostageFee={returnPostageFee} />
           <Button
             onClick={handleContinue}
             className="w-full gap-2"
             size="lg"
-            disabled={!selectedDate || (!isDropoff && !selectedSlot)}
+            disabled={(needsDate && !selectedDate) || (!isDropoff && !isPostal && !selectedSlot)}
           >
             Continue to Checkout
             <ArrowRight className="h-4 w-4" />

@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import {
   deliveryFeeFor,
+  feeLabelFor,
+  isPostalAvailable,
+  isValidUkPostcode,
+  isInPickupArea,
+  royalMailTrackingUrl,
   orderTotal,
   isDropoffAvailable,
   formatDropoffAddress,
@@ -8,7 +13,7 @@ import {
   initialStatusFor,
   statusLabelFor,
 } from '@/lib/fulfilment'
-import { DELIVERY_FEE } from '@/lib/constants'
+import { DELIVERY_FEE, RETURN_POSTAGE_FEE } from '@/lib/constants'
 import type { DropoffLocation } from '@/lib/types'
 
 const LOCATION: DropoffLocation = {
@@ -29,6 +34,63 @@ describe('delivery fee', () => {
   it('charges nothing for a drop-off, which has no runner on either leg', () => {
     expect(deliveryFeeFor('dropoff')).toBe(0)
     expect(orderTotal(24, 'dropoff')).toBe(24)
+  })
+
+  it('charges Royal Mail return postage on a postal order', () => {
+    expect(deliveryFeeFor('postal')).toBe(RETURN_POSTAGE_FEE)
+    expect(orderTotal(24, 'postal')).toBe(24 + RETURN_POSTAGE_FEE)
+  })
+
+  it('prefers the configured fees over the built-in defaults', () => {
+    expect(deliveryFeeFor('postal', { returnPostage: 7.5 })).toBe(7.5)
+    expect(deliveryFeeFor('pickup', { delivery: 8 })).toBe(8)
+    // A configured fee never reintroduces a charge on drop-off
+    expect(deliveryFeeFor('dropoff', { returnPostage: 7.5, delivery: 8 })).toBe(0)
+  })
+
+  it('names the fee line for the fulfilment type', () => {
+    expect(feeLabelFor('postal')).toMatch(/royal mail/i)
+    expect(feeLabelFor('pickup')).toMatch(/delivery/i)
+  })
+})
+
+describe('postcodes', () => {
+  it('accepts UK postcodes from anywhere, however they are spaced', () => {
+    for (const pc of ['NG1 1AA', 'sw1a2aa', 'EH1 1YZ', 'M1 1AE', 'B33 8TH', 'CR2 6XH']) {
+      expect(isValidUkPostcode(pc)).toBe(true)
+    }
+  })
+
+  it('rejects obvious nonsense', () => {
+    for (const pc of ['', 'hello', '12345', 'NG1']) {
+      expect(isValidUkPostcode(pc)).toBe(false)
+    }
+  })
+
+  it('limits runner pickups to Nottingham', () => {
+    expect(isInPickupArea('NG7 2RD')).toBe(true)
+    expect(isInPickupArea('ng1 1aa')).toBe(true)
+    expect(isInPickupArea('SW1A 2AA')).toBe(false)
+  })
+})
+
+describe('isPostalAvailable', () => {
+  it('is independent of the walk-in drop-off switch', () => {
+    expect(isPostalAvailable({ ...LOCATION, postalEnabled: true })).toBe(true)
+    // Accepting parcels without running a walk-in counter is valid
+    expect(
+      isPostalAvailable({ ...LOCATION, enabled: false, postalEnabled: true })
+    ).toBe(true)
+    expect(isPostalAvailable(LOCATION)).toBe(false)
+    expect(
+      isPostalAvailable({ ...LOCATION, postalEnabled: true, postcode: '' })
+    ).toBe(false)
+  })
+})
+
+describe('royalMailTrackingUrl', () => {
+  it('builds a tracking link', () => {
+    expect(royalMailTrackingUrl(' AB123456789GB ')).toContain('AB123456789GB')
   })
 })
 
@@ -91,6 +153,53 @@ describe('validateOrderDetails', () => {
     ).toMatch(/drop your items off/i)
   })
 
+  it('accepts a postal order with a return address anywhere in the UK', () => {
+    expect(
+      validateOrderDetails({
+        fulfilment: 'postal',
+        paymentMethod: 'online',
+        phone: '07123 456789',
+        address: { line1: '9 Royal Mile', city: 'Edinburgh', postcode: 'EH1 1YZ' },
+      })
+    ).toBeNull()
+  })
+
+  it('requires a return address on a postal order', () => {
+    expect(
+      validateOrderDetails({
+        fulfilment: 'postal',
+        paymentMethod: 'online',
+        phone: '07123 456789',
+      })
+    ).toMatch(/return address/i)
+  })
+
+  it('rejects a pickup outside Nottingham and points elsewhere', () => {
+    expect(
+      validateOrderDetails({
+        ...pickup,
+        address: { line1: '9 Royal Mile', city: 'Edinburgh', postcode: 'EH1 1YZ' },
+      })
+    ).toMatch(/only collect from nottingham/i)
+  })
+
+  it('rejects a malformed postcode on any addressed order', () => {
+    expect(
+      validateOrderDetails({ ...pickup, address: { ...pickup.address, postcode: 'nope' } })
+    ).toMatch(/valid uk postcode/i)
+  })
+
+  it('refuses pay-in-person on a postal order, which has no counter', () => {
+    expect(
+      validateOrderDetails({
+        fulfilment: 'postal',
+        paymentMethod: 'in_person',
+        phone: '07123 456789',
+        address: { line1: '9 Royal Mile', city: 'Edinburgh', postcode: 'EH1 1YZ' },
+      })
+    ).toMatch(/only available for drop-off/i)
+  })
+
   it('refuses pay-in-person on a pickup order, which has no counter', () => {
     expect(validateOrderDetails({ ...pickup, paymentMethod: 'in_person' })).toMatch(
       /only available for drop-off/i
@@ -117,6 +226,11 @@ describe('statusLabelFor', () => {
     expect(statusLabelFor('collected', 'dropoff', 'Collected')).toBe('Received')
     expect(statusLabelFor('completed', 'dropoff', 'Completed')).toBe('Collected by customer')
     expect(statusLabelFor('booked', 'dropoff', 'Booked')).toBe('Awaiting drop-off')
+  })
+
+  it('rewords the shared statuses for postal orders', () => {
+    expect(statusLabelFor('collected', 'postal', 'Collected')).toBe('Parcel received')
+    expect(statusLabelFor('completed', 'postal', 'Completed')).toBe('Posted back')
   })
 
   it('leaves pickup orders and unmapped statuses alone', () => {

@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmation } from '@/lib/email'
 import { formatPrice } from '@/lib/utils'
 import { PICKUP_SLOTS } from '@/lib/constants'
+import { formatDropoffAddress, isPostalAvailable } from '@/lib/fulfilment'
+import type { DropoffLocation } from '@/lib/types'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
@@ -91,6 +93,27 @@ export async function POST(req: NextRequest) {
       if (order && order.customer) {
         const pickupSlot = PICKUP_SLOTS.find(s => s.id === order.pickup_slot)
 
+        // Postal customers need the address to send their items to; it is not
+        // in the pickup fields, so load it the same way checkout does.
+        let dropoff
+        if (order.fulfilment_type === 'postal') {
+          const { data: setting } = await supabase
+            .from('site_settings')
+            .select('value')
+            .eq('key', 'dropoff_location')
+            .maybeSingle()
+
+          const location = setting?.value as DropoffLocation | null
+
+          if (isPostalAvailable(location)) {
+            dropoff = {
+              mode: 'postal' as const,
+              address: formatDropoffAddress(location!),
+              hours: location!.hours,
+            }
+          }
+        }
+
         await sendOrderConfirmation({
           to: order.customer.email,
           customerName: order.customer.full_name,
@@ -104,6 +127,7 @@ export async function POST(req: NextRequest) {
           }) : undefined,
           pickupTime: pickupSlot?.label,
           itemCount: order.items?.length || 0,
+          dropoff,
         })
         console.log(`Order confirmation email sent to ${order.customer.email}`)
       }

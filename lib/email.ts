@@ -6,6 +6,7 @@ import CartReminder1 from '@/emails/cart-reminder-1'
 import CartReminder2 from '@/emails/cart-reminder-2'
 import CartReminder3 from '@/emails/cart-reminder-3'
 import type { CartReminderEmailProps } from '@/lib/types'
+import { royalMailTrackingUrl } from '@/lib/fulfilment'
 
 // Initialize Resend (will use RESEND_API_KEY from env)
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -32,6 +33,7 @@ interface OrderConfirmationData {
   pickupTime?: string
   itemCount: number
   dropoff?: {
+    mode?: 'dropoff' | 'postal'
     date?: string
     address: string
     hours: string
@@ -181,6 +183,56 @@ export async function sendVerificationEmail(to: string, name: string, otp: strin
     return { success: true, data: result }
   } catch (error) {
     console.error('Failed to send verification email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendItemsPostedEmail(
+  to: string,
+  name: string,
+  orderNumber: string,
+  trackingNumber: string
+) {
+  const trackingUrl = royalMailTrackingUrl(trackingNumber)
+
+  try {
+    const result = await deliver({
+      from: FROM_EMAIL,
+      to,
+      replyTo: REPLY_TO,
+      subject: `On its way - ${orderNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Your items are on their way</h1>
+          <p>Hi ${name},</p>
+          <p>Your alterations are finished and your parcel is back in the post, sent by Royal Mail.</p>
+
+          <div style="background-color: #f5f5f5; padding: 20px; margin: 30px 0; border-radius: 8px;">
+            <p style="margin: 0 0 8px 0;"><strong>Order:</strong> ${orderNumber}</p>
+            <p style="margin: 0;"><strong>Tracking number:</strong> ${trackingNumber}</p>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${trackingUrl}" style="background-color: #000; color: #fff; padding: 12px 32px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Track Your Parcel
+            </a>
+          </div>
+
+          <p>Tracking can take a few hours to show its first update after posting.</p>
+          <p>Thank you for choosing TailorSpace.</p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #999; font-size: 12px;">
+            This is an automated message from TailorSpace. Questions? Just reply to this email.
+          </p>
+        </div>
+      `,
+    })
+
+    console.log('Items posted email sent:', result)
+    return { success: true, data: result }
+  } catch (error) {
+    console.error('Failed to send items posted email:', error)
     return { success: false, error }
   }
 }

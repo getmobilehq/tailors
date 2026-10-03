@@ -113,18 +113,30 @@ export and holds docs only. The application code lives in `app/`, `components/`,
 
 ### Fulfilment Types
 
-Orders are either a runner **pickup** (the original flow) or a customer
-**dropoff** (`orders.fulfilment_type`). Drop-off orders:
-- carry no delivery fee, and never appear in the runner queue
-- have a null `customer_address` - always read it with `?.`
-- may be paid at the counter (`payment_method: 'in_person'`), which skips Stripe
-  and confirms the order immediately as `booked` and `payment_status: 'unpaid'`
-- reuse `collected` ("Received") and `completed` ("Collected by customer") rather
-  than adding statuses, so existing status maps keep working
+`orders.fulfilment_type` is one of:
 
-Fee, validation and status wording live in `/lib/fulfilment.ts` (unit tested).
-The drop-off address is the `dropoff_location` row in `site_settings`, edited in
-Admin -> Settings, and hidden from customers until it is filled in and enabled.
+- **pickup** - the original flow. Runner collects and delivers, £7 fee, NG
+  postcodes only.
+- **dropoff** - customer brings items to the counter and collects them again.
+  No fee, no address, no runner. May be paid in person.
+- **postal** - customer posts items in with any courier (their cost); we post
+  them back by Royal Mail for a flat fee from `return_postage_fee`. Needs an
+  address (the return address) anywhere in the UK, and is always paid online.
+
+Shared rules:
+- Drop-off and postal never appear in the runner queue.
+- Both reuse `collected` and `completed` rather than adding statuses, relabelled
+  per type ("Parcel received", "Posted back"). See `statusLabelFor`.
+- `customer_address` is null for drop-off - always read it with `?.`.
+- Paying in person (`payment_method: 'in_person'`) is drop-off only. It skips
+  Stripe and confirms the order as `booked` / `payment_status: 'unpaid'`.
+- Fees, validation, postcode rules and status wording live in
+  `/lib/fulfilment.ts` (unit tested). `/api/checkout` bills `order.delivery_fee`,
+  never a constant.
+
+The address serves both drop-off and postal: the `dropoff_location` row in
+`site_settings`, with separate `enabled` and `postalEnabled` switches, edited in
+Admin -> Settings and hidden from customers until an address is filled in.
 
 ### Order Lifecycle
 
@@ -143,7 +155,7 @@ Admin -> Settings, and hidden from customers until it is filled in and enabled.
 - `/api/webhooks/stripe` - Handles Stripe webhook (checkout.session.completed)
 - `/api/webhooks/resend` - Reports bounced/failed/complained/delayed emails to Sentry (needs `RESEND_WEBHOOK_SECRET`)
 - `/api/dropoff-location` - Public: the configured drop-off point, or `available: false`
-- `/api/orders/[id]/receive|mark-paid|handover` - Counter actions on drop-off orders (admin/tailor)
+- `/api/orders/[id]/receive|mark-paid|handover|post-back` - Staff actions on drop-off and postal orders (admin/tailor). `post-back` records the Royal Mail tracking number and emails the customer
 - `/api/runner/accept` - Runner accepts a job
 
 ### Testing
@@ -151,7 +163,7 @@ Admin -> Settings, and hidden from customers until it is filled in and enabled.
 **Unit tests:** `npm test` runs vitest over `lib/**/*.test.ts` — currently the
 multi-tailor payout split (`lib/tailor-payout.ts`), the item-to-tailor picker
 (`lib/tailor-assignment-core.ts`), email send-failure handling (`lib/email.ts`, with
-Resend mocked), the rate limiter, and drop-off fees/validation (`lib/fulfilment.ts`).
+Resend mocked), the rate limiter, and fulfilment fees/validation/postcodes (`lib/fulfilment.ts`).
 No database or env vars needed.
 
 **Stripe test cards:**
@@ -163,7 +175,8 @@ No database or env vars needed.
 2. Change role in Supabase Table Editor → users table
 3. For runners/tailors, also create profile records (see `src/QUICK_START.md` for SQL)
 
-**Service area:** Nottingham postcodes NG1, NG2, NG3, NG5, NG7, NG9
+**Service area:** runner pickup is Nottingham (NG) only; drop-off and postal are
+open to the whole UK.
 
 ## Important Notes
 

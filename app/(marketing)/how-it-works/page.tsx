@@ -21,23 +21,24 @@ export default function HowItWorksPage() {
               step: 1,
               icon: <Calendar className="h-12 w-12" />,
               title: 'Book Online',
-              description: 'Choose your alterations from our fixed-price menu, schedule a convenient pickup time, and pay securely online.',
+              description: 'Choose your alterations from our fixed-price menu, pick how your items reach us, and pay securely online.',
               details: [
                 'Browse our full service list',
-                'Select morning, afternoon, or evening slot',
+                'Post them from anywhere in the UK',
+                'Or, in Nottingham, book a collection or drop them in',
                 'Add photos and notes for each garment',
-                'Pay upfront with card (no cash needed)',
               ],
             },
             {
               step: 2,
               icon: <MapPin className="h-12 w-12" />,
-              title: 'Expert Collection',
-              description: 'Our trained runner arrives at your door to collect your items and take precise measurements.',
+              title: 'Getting Them To Us',
+              description: 'Post your items with any courier, or have a runner collect them from your door in Nottingham.',
               details: [
-                'Runner arrives at your scheduled time',
-                'Professional measurements taken on-site',
-                'Consultation on best alteration approach',
+                'Post from anywhere in the UK - we recommend tracked',
+                'Or a runner collects at your scheduled time',
+                'Measurements taken on collection, or when your parcel arrives',
+                'We confirm by email as soon as we have your items',
               ],
             },
             {
@@ -55,12 +56,12 @@ export default function HowItWorksPage() {
             {
               step: 4,
               icon: <Package className="h-12 w-12" />,
-              title: 'Delivered Back to You',
-              description: 'Your perfectly altered garments are delivered back to your door, ready to wear.',
+              title: 'Back To You',
+              description: 'Your altered garments come back by tracked Royal Mail post, or to your door in Nottingham.',
               details: [
-                'Delivery scheduled at your convenience',
+                'Posted back tracked, with the number emailed to you',
+                'Or delivered to your door, scheduled at your convenience',
                 'Items protected in garment bags',
-                'Try on and inspect at delivery',
                 'Leave a review to help others',
               ],
             },
@@ -124,19 +125,39 @@ export default function HowItWorksPage() {
 
         {/* Service Area */}
         <div className="bg-muted rounded-lg p-8 mb-12">
-          <h2 className="text-2xl mb-4 text-center">Service Area</h2>
-          <p className="text-center text-muted-foreground mb-6">
-            We currently serve the following Nottingham postcodes:
+          <h2 className="text-2xl mb-4 text-center">Where We Work</h2>
+          <p className="text-center text-muted-foreground mb-8">
+            Wherever you are in the UK, there is a way to get your items to us.
           </p>
-          <div className="flex flex-wrap justify-center gap-3 mb-6">
-            {['NG1', 'NG2', 'NG3', 'NG5', 'NG7', 'NG9'].map((postcode) => (
-              <div key={postcode} className="px-4 py-2 bg-white rounded-full font-semibold">
-                {postcode}
+
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-white rounded-lg p-6">
+              <h3 className="font-semibold mb-2">Anywhere in the UK</h3>
+              <p className="text-sm text-muted-foreground">
+                Post your items to us with Royal Mail or any courier you like, and we
+                post them back tracked once they are finished. You pay postage one way;
+                the return trip is a flat fee at checkout.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6">
+              <h3 className="font-semibold mb-2">In Nottingham</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Choose doorstep collection and delivery by one of our runners, or drop
+                your items in yourself and collect them when they are ready.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {['NG1', 'NG2', 'NG3', 'NG5', 'NG7', 'NG9'].map((postcode) => (
+                  <div key={postcode} className="px-3 py-1 bg-muted rounded-full text-sm font-semibold">
+                    {postcode}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
+
           <p className="text-center text-sm text-muted-foreground">
-            Don't see your postcode? Contact us—we're expanding soon!
+            Outside those postcodes? Posting your items works from anywhere in the UK.
           </p>
         </div>
 

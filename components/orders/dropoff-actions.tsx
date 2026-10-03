@@ -5,23 +5,30 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatPrice } from '@/lib/utils'
-import { Banknote, CreditCard, PackageCheck, HandCoins } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Banknote, CreditCard, PackageCheck, HandCoins, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Order } from '@/lib/types'
 
 /**
- * Counter actions for a drop-off order: take the items in, take the money, and
- * hand the finished items back. Pickup orders are driven by the runner screens
- * instead, so this renders nothing for them.
+ * Counter actions for orders with no runner: take the items in (handed over or
+ * posted), take the money, and get the finished items back to the customer -
+ * over the counter for a drop-off, by Royal Mail for a postal order. Pickup
+ * orders are driven by the runner screens instead, so this renders nothing for
+ * them.
  */
 export function DropoffActions({ order }: { order: Order }) {
   const router = useRouter()
   const [busy, setBusy] = useState<string | null>(null)
+  const [tracking, setTracking] = useState('')
 
-  if (order.fulfilment_type !== 'dropoff') return null
+  const isPostal = order.fulfilment_type === 'postal'
 
-  const awaitingDropoff = order.status === 'booked'
-  const readyForCollection = order.status === 'ready'
+  if (order.fulfilment_type !== 'dropoff' && !isPostal) return null
+
+  const awaitingItems = order.status === 'booked'
+  const readyToReturn = order.status === 'ready'
   const owesMoney = order.payment_method === 'in_person' && order.payment_status === 'unpaid'
 
   async function call(action: string, label: string, body?: Record<string, unknown>) {
@@ -45,29 +52,35 @@ export function DropoffActions({ order }: { order: Order }) {
     }
   }
 
-  if (!awaitingDropoff && !readyForCollection && !owesMoney) return null
+  if (!awaitingItems && !readyToReturn && !owesMoney) return null
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <PackageCheck className="h-5 w-5" />
-          Counter
+          {isPostal ? <Mail className="h-5 w-5" /> : <PackageCheck className="h-5 w-5" />}
+          {isPostal ? 'Postal order' : 'Counter'}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {awaitingDropoff && (
+        {awaitingItems && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              The customer is bringing these items in. Record it when they arrive.
+              {isPostal
+                ? 'The customer is posting these items to you. Record it when the parcel arrives.'
+                : 'The customer is bringing these items in. Record it when they arrive.'}
             </p>
             <Button
               className="w-full gap-2"
               disabled={busy !== null}
-              onClick={() => call('receive', 'Items received')}
+              onClick={() => call('receive', isPostal ? 'Parcel received' : 'Items received')}
             >
               <PackageCheck className="h-4 w-4" />
-              {busy === 'receive' ? 'Saving...' : 'Items received'}
+              {busy === 'receive'
+                ? 'Saving...'
+                : isPostal
+                  ? 'Parcel received'
+                  : 'Items received'}
             </Button>
           </div>
         )}
@@ -104,7 +117,30 @@ export function DropoffActions({ order }: { order: Order }) {
           </div>
         )}
 
-        {readyForCollection && (
+        {readyToReturn && isPostal && (
+          <div className="space-y-2">
+            <Label htmlFor="tracking">Royal Mail tracking number</Label>
+            <Input
+              id="tracking"
+              placeholder="AB123456789GB"
+              value={tracking}
+              onChange={(e) => setTracking(e.target.value)}
+            />
+            <p className="text-sm text-muted-foreground">
+              Saving this completes the order and emails the customer a tracking link.
+            </p>
+            <Button
+              className="w-full gap-2"
+              disabled={busy !== null || !tracking.trim()}
+              onClick={() => call('post-back', 'Marked posted', { trackingNumber: tracking })}
+            >
+              <Mail className="h-4 w-4" />
+              {busy === 'post-back' ? 'Saving...' : 'Mark posted & notify'}
+            </Button>
+          </div>
+        )}
+
+        {readyToReturn && !isPostal && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
               {owesMoney

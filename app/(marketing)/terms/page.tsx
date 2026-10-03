@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata = {
   title: 'Terms of Service | TailorSpace',
-  description: 'Terms of Service for TailorSpace clothing alterations marketplace in Nottingham.',
+  description: 'Terms of Service for the TailorSpace clothing alterations marketplace.',
 }
 
 export default function TermsPage() {
@@ -34,7 +34,7 @@ export default function TermsPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                TailorSpace is a marketplace platform that connects customers with professional tailors and runners in Nottingham, UK. We facilitate:
+                TailorSpace is a marketplace platform that connects customers across the United Kingdom with professional tailors, and with runners in Nottingham. We facilitate:
               </p>
               <ul>
                 <li>Collection of garments from customers' homes</li>
@@ -125,10 +125,21 @@ export default function TermsPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                Our collection and delivery services are available in the following Nottingham postcodes: NG1, NG2, NG3, NG5, NG7, and NG9.
+                We accept postal orders from any address in the United Kingdom. You
+                arrange and pay for sending your items to us, using the carrier of your
+                choice. We return finished items by Royal Mail for the fixed return
+                postage fee shown at checkout.
               </p>
               <p>
-                We reserve the right to decline service to addresses outside our coverage area.
+                Doorstep collection and delivery by our runners is available only in the
+                following Nottingham postcodes: NG1, NG2, NG3, NG5, NG7, and NG9. Items
+                may also be dropped off and collected in person at our stated address
+                during its opening hours.
+              </p>
+              <p>
+                We are not responsible for items lost or damaged in transit to us; we
+                recommend a tracked service. We reserve the right to decline collection
+                or delivery to addresses outside our coverage area.
               </p>
             </CardContent>
           </Card>

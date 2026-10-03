@@ -18,7 +18,7 @@ export function Footer() {
               <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-dm-sans)' }}>TailorSpace</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Expert alterations delivered to your door across Nottingham.
+              Expert alterations by post across the UK, and to your door in Nottingham.
             </p>
           </div>
 

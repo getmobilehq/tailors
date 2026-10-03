@@ -16,6 +16,7 @@ import { formatDate, formatPrice } from '@/lib/utils'
 import { PICKUP_SLOTS, DELIVERY_FEE } from '@/lib/constants'
 import { DropoffAddress } from '@/components/booking/dropoff-address'
 import type { DropoffLocation, FulfilmentType, PaymentMethod } from '@/lib/types'
+import { isInPickupArea, isValidUkPostcode } from '@/lib/fulfilment'
 import type { SavedAddress } from '@/lib/types'
 
 interface RecoveryOrder {
@@ -43,8 +44,12 @@ export default function CheckoutContent() {
   const [dropoffDate, setDropoffDate] = useState('')
   const [dropoff, setDropoff] = useState<DropoffLocation | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('online')
+  const [returnPostageFee, setReturnPostageFee] = useState<number | undefined>()
 
   const isDropoff = fulfilment === 'dropoff'
+  const isPostal = fulfilment === 'postal'
+  // Postal needs an address - that is where the finished items go back to
+  const needsAddress = !isDropoff
   const [recoveryOrder, setRecoveryOrder] = useState<RecoveryOrder | null>(null)
   const [recoveryLoading, setRecoveryLoading] = useState(!!recoveryOrderId)
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
@@ -114,9 +119,29 @@ export default function CheckoutContent() {
       return
     }
 
-    const chosenFulfilment =
-      localStorage.getItem('fulfilment_type') === 'dropoff' ? 'dropoff' : 'pickup'
+    const stored = localStorage.getItem('fulfilment_type')
+    const chosenFulfilment: FulfilmentType =
+      stored === 'dropoff' ? 'dropoff' : stored === 'postal' ? 'postal' : 'pickup'
     setFulfilment(chosenFulfilment)
+
+    if (chosenFulfilment === 'postal') {
+      fetch('/api/dropoff-location')
+        .then((res) => res.json())
+        .then((data) => {
+          // Postal was switched off between steps
+          if (!data.postalAvailable) {
+            toast.error('Posting is not available right now - please choose another option')
+            router.push('/book/schedule')
+            return
+          }
+          setDropoff(data.location)
+          if (typeof data.returnPostageFee === 'number') setReturnPostageFee(data.returnPostageFee)
+        })
+        .catch(() => router.push('/book/schedule'))
+
+      fetchSavedAddresses()
+      return
+    }
 
     if (chosenFulfilment === 'dropoff') {
       const chosenDate = localStorage.getItem('dropoff_date')
@@ -131,7 +156,7 @@ export default function CheckoutContent() {
         .then((res) => res.json())
         .then((data) => {
           // The location was switched off between steps
-          if (!data.available) {
+          if (!data.dropoffAvailable) {
             toast.error('Drop-off is not available right now - please choose a pickup')
             router.push('/book/schedule')
             return
@@ -249,9 +274,14 @@ export default function CheckoutContent() {
           return
         }
 
-        // Validate Nottingham postcode
-        if (!formData.postcode.toUpperCase().startsWith('NG')) {
-          toast.error('We currently only serve Nottingham postcodes (NG)')
+        if (!isValidUkPostcode(formData.postcode)) {
+          toast.error('Please enter a valid UK postcode')
+          return
+        }
+
+        // Runners only collect around Nottingham; postal goes UK-wide
+        if (!isPostal && !isInPickupArea(formData.postcode)) {
+          toast.error('We only collect from Nottingham postcodes - choose drop-off or post instead')
           return
         }
       }
@@ -297,7 +327,7 @@ export default function CheckoutContent() {
             photos: item.photos,
             notes: item.notes,
           })),
-          address: isDropoff
+          address: !needsAddress
             ? null
             : {
                 line1: formData.line1,
@@ -421,7 +451,7 @@ export default function CheckoutContent() {
     )
   }
 
-  if (!recoveryOrder && !pickupInfo.date && !dropoffDate) {
+  if (!recoveryOrder && !pickupInfo.date && !dropoffDate && !isPostal) {
     return null
   }
 
@@ -450,9 +480,22 @@ export default function CheckoutContent() {
           {/* Pickup or drop-off summary */}
           <Card>
             <CardHeader>
-              <CardTitle>{isDropoff ? 'Drop-off Details' : 'Pickup Details'}</CardTitle>
+              <CardTitle>
+                {isPostal ? 'Posting Details' : isDropoff ? 'Drop-off Details' : 'Pickup Details'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {isPostal ? (
+                <div className="flex justify-between items-start gap-4">
+                  <p className="text-sm text-muted-foreground">
+                    Post your items to the address below whenever suits you, with any
+                    courier you like. Include your order number in the parcel.
+                  </p>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/book/schedule">Change</Link>
+                  </Button>
+                </div>
+              ) : (
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-medium">
@@ -470,8 +513,9 @@ export default function CheckoutContent() {
                   <Link href="/book/schedule">Change</Link>
                 </Button>
               </div>
+              )}
 
-              {isDropoff && dropoff && <DropoffAddress location={dropoff} />}
+              {(isDropoff || isPostal) && dropoff && <DropoffAddress location={dropoff} />}
             </CardContent>
           </Card>
 
@@ -515,11 +559,11 @@ export default function CheckoutContent() {
             </Card>
           )}
 
-          {/* Address Form - drop-off customers bring the items to us */}
-          {!isDropoff && (
+          {/* Address form - drop-off customers bring the items to us */}
+          {needsAddress && (
           <Card>
             <CardHeader>
-              <CardTitle>Collection Address</CardTitle>
+              <CardTitle>{isPostal ? 'Return Address' : 'Collection Address'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Saved Addresses Selector */}
@@ -740,7 +784,7 @@ export default function CheckoutContent() {
               </CardContent>
             </Card>
           ) : (
-            <CartSummary fulfilment={fulfilment} />
+            <CartSummary fulfilment={fulfilment} returnPostageFee={returnPostageFee} />
           )}
           <Button
             onClick={handleCheckout}

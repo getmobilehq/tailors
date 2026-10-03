@@ -14,8 +14,11 @@ export type OrderStatus =
 
 export type PickupSlot = 'morning' | 'afternoon' | 'evening'
 
-/** How the items reach us and go back: runner pickup, or customer drop-off. */
-export type FulfilmentType = 'pickup' | 'dropoff'
+/**
+ * How the items reach us and go back: a runner collects, the customer brings
+ * them in, or they travel by post (customer's courier in, Royal Mail back).
+ */
+export type FulfilmentType = 'pickup' | 'dropoff' | 'postal'
 
 /** Card online at checkout, or cash/card at the counter on drop-off. */
 export type PaymentMethod = 'online' | 'in_person'
@@ -26,7 +29,10 @@ export type PaidMethod = 'cash' | 'card' | 'stripe'
 
 /** site_settings key 'dropoff_location' - where drop-off customers bring items. */
 export interface DropoffLocation {
+  /** Walk-in drop-off offered at checkout */
   enabled: boolean
+  /** Postal orders accepted at this same address */
+  postalEnabled?: boolean
   name: string
   line1: string
   line2?: string
@@ -102,6 +108,8 @@ export interface Order {
   pickup_slot: PickupSlot | null
   dropoff_date: string | null
   dropped_off_at: string | null
+  return_tracking_number: string | null
+  posted_back_at: string | null
   estimated_completion: string | null
   measurements: Record<string, number> | null
   runner_notes: string | null

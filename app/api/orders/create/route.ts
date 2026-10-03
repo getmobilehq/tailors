@@ -48,7 +48,12 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const { items, address, phone, notes, pickupDate, pickupSlot, dropoffDate } = body
-    const fulfilment: FulfilmentType = body.fulfilment === 'dropoff' ? 'dropoff' : 'pickup'
+    const fulfilment: FulfilmentType =
+      body.fulfilment === 'dropoff'
+        ? 'dropoff'
+        : body.fulfilment === 'postal'
+          ? 'postal'
+          : 'pickup'
     const paymentMethod: PaymentMethod = body.paymentMethod === 'in_person' ? 'in_person' : 'online'
 
     console.log('[ORDER CREATE] Request data:', {
@@ -82,8 +87,18 @@ export async function POST(req: NextRequest) {
     const subtotal = items.reduce((sum: number, item: any) =>
       sum + (item.service.price * item.quantity), 0
     )
-    const deliveryFee = deliveryFeeFor(fulfilment)
-    const total = orderTotal(subtotal, fulfilment)
+    // Price the fee from settings so admin changes apply at once. Never trust
+    // a fee sent by the client.
+    const adminForFees = createAdminClient()
+    const { data: feeSetting } = await adminForFees
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'return_postage_fee')
+      .maybeSingle()
+
+    const fees = { returnPostage: (feeSetting?.value as { amount?: number } | null)?.amount }
+    const deliveryFee = deliveryFeeFor(fulfilment, fees)
+    const total = orderTotal(subtotal, fulfilment, fees)
 
     console.log('[ORDER CREATE] Calculated totals - Subtotal:', subtotal, 'Total:', total)
 
@@ -185,6 +200,7 @@ export async function POST(req: NextRequest) {
         itemCount: items.length,
         dropoff: isDropoffAvailable(location)
           ? {
+              mode: 'dropoff' as const,
               date: dropoffDate
                 ? new Date(dropoffDate).toLocaleDateString('en-GB', {
                     weekday: 'long',

@@ -18,8 +18,9 @@ interface OrderConfirmationEmailProps {
   pickupDate?: string
   pickupTime?: string
   itemCount: number
-  /** Set for drop-off orders: where and when to bring the items */
+  /** Set for drop-off and postal orders: where the items need to get to */
   dropoff?: {
+    mode?: 'dropoff' | 'postal'
     date?: string
     address: string
     hours: string
@@ -75,9 +76,11 @@ export default function OrderConfirmationEmail({
             {dropoff && (
               <>
                 <Hr style={hr} />
-                <Text style={orderLabel}>Drop your items off at</Text>
+                <Text style={orderLabel}>
+                  {dropoff.mode === 'postal' ? 'Post your items to' : 'Drop your items off at'}
+                </Text>
                 <Text style={orderValue}>{dropoff.address}</Text>
-                <Text style={orderValue}>{dropoff.hours}</Text>
+                {dropoff.mode !== 'postal' && <Text style={orderValue}>{dropoff.hours}</Text>}
                 {dropoff.date && (
                   <>
                     <Hr style={hr} />
@@ -98,7 +101,21 @@ export default function OrderConfirmationEmail({
 
           <Section style={nextSteps}>
             <Heading as="h2" style={h2}>What happens next?</Heading>
-            {dropoff ? (
+            {dropoff?.mode === 'postal' ? (
+              <>
+                <Text style={stepText}>
+                  1. Post your items to the address above, with any courier you like
+                </Text>
+                <Text style={stepText}>
+                  2. Include a note with your order number so we know whose items they are
+                </Text>
+                <Text style={stepText}>3. We'll email you as soon as your parcel arrives</Text>
+                <Text style={stepText}>4. Our expert tailors will work their magic</Text>
+                <Text style={stepText}>
+                  5. We'll post them back by Royal Mail and send you the tracking number
+                </Text>
+              </>
+            ) : dropoff ? (
               <>
                 <Text style={stepText}>1. Bring your items to the address above</Text>
                 <Text style={stepText}>2. We'll take your measurements at the counter</Text>

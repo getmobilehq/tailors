@@ -4,12 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCart } from '@/hooks/use-cart'
 import { formatPrice } from '@/lib/utils'
 import { ShoppingBag } from 'lucide-react'
-import { deliveryFeeFor } from '@/lib/fulfilment'
+import { deliveryFeeFor, feeLabelFor } from '@/lib/fulfilment'
 import type { FulfilmentType } from '@/lib/types'
 
-export function CartSummary({ fulfilment = 'pickup' }: { fulfilment?: FulfilmentType }) {
+export function CartSummary({
+  fulfilment = 'pickup',
+  returnPostageFee,
+}: {
+  fulfilment?: FulfilmentType
+  /** Royal Mail fee from settings; falls back to the built-in default */
+  returnPostageFee?: number
+}) {
   const { items, subtotal } = useCart()
-  const deliveryFee = deliveryFeeFor(fulfilment)
+  const deliveryFee = deliveryFeeFor(fulfilment, { returnPostage: returnPostageFee })
   const orderTotal = subtotal() + deliveryFee
 
   if (items.length === 0) {
@@ -47,7 +54,7 @@ export function CartSummary({ fulfilment = 'pickup' }: { fulfilment?: Fulfilment
             <span>{formatPrice(subtotal())}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>Pickup &amp; Delivery</span>
+            <span>{feeLabelFor(fulfilment)}</span>
             {deliveryFee === 0 ? (
               <span className="text-muted-foreground">Free (drop-off)</span>
             ) : (

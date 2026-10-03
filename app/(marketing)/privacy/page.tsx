@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata = {
   title: 'Privacy Policy | TailorSpace',
-  description: 'Privacy Policy for TailorSpace clothing alterations marketplace in Nottingham.',
+  description: 'Privacy Policy for the TailorSpace clothing alterations marketplace.',
 }
 
 export default function PrivacyPage() {
