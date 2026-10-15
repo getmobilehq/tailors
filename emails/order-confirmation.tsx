@@ -25,6 +25,7 @@ interface OrderConfirmationEmailProps {
     address: string
     hours: string
     amountDue?: string
+    instructions?: string
   }
 }
 
@@ -81,6 +82,9 @@ export default function OrderConfirmationEmail({
                 </Text>
                 <Text style={orderValue}>{dropoff.address}</Text>
                 {dropoff.mode !== 'postal' && <Text style={orderValue}>{dropoff.hours}</Text>}
+                {dropoff.instructions && (
+                  <Text style={orderValue}>{dropoff.instructions}</Text>
+                )}
                 {dropoff.date && (
                   <>
                     <Hr style={hr} />

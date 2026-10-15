@@ -38,6 +38,7 @@ interface OrderConfirmationData {
     address: string
     hours: string
     amountDue?: string
+    instructions?: string
   }
 }
 

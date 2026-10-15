@@ -38,6 +38,7 @@ export default function SiteSettingsPage() {
     postcode: '',
     hours: 'Mon-Sat, 9:00am - 6:00pm',
     instructions: '',
+    postalInstructions: '',
   })
 
   useEffect(() => {
@@ -441,14 +442,36 @@ export default function SiteSettingsPage() {
             </div>
 
             <div>
-              <Label htmlFor="dropoff-instructions">Instructions for customers (optional)</Label>
+              <Label htmlFor="dropoff-instructions">
+                Instructions for walk-in customers (optional)
+              </Label>
               <Input
                 id="dropoff-instructions"
                 className="mt-2"
-                placeholder="Ask for the TailorSpace counter when you arrive."
+                placeholder="Please phone to confirm before coming."
                 value={dropoff.instructions || ''}
                 onChange={(e) => setDropoff({ ...dropoff, instructions: e.target.value })}
               />
+              <p className="text-sm text-muted-foreground mt-1">
+                Shown only to customers bringing items to the door.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="postal-instructions">
+                Instructions for postal customers (optional)
+              </Label>
+              <Input
+                id="postal-instructions"
+                className="mt-2"
+                placeholder="Address the parcel to TailorSpace and allow for a signature."
+                value={dropoff.postalInstructions || ''}
+                onChange={(e) => setDropoff({ ...dropoff, postalInstructions: e.target.value })}
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Shown only to customers posting items in, and included in their
+                confirmation email. Leave blank if there is nothing extra to say.
+              </p>
             </div>
 
             <Button

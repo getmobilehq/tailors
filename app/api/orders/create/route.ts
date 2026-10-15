@@ -210,6 +210,7 @@ export async function POST(req: NextRequest) {
                 : undefined,
               address: formatDropoffAddress(location!),
               hours: location!.hours,
+              instructions: location!.instructions,
               amountDue: formatPrice(total),
             }
           : undefined,

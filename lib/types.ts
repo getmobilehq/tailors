@@ -39,7 +39,10 @@ export interface DropoffLocation {
   city: string
   postcode: string
   hours: string
+  /** Shown to walk-in drop-off customers */
   instructions?: string
+  /** Shown to postal customers, who are never standing at the door */
+  postalInstructions?: string
 }
 
 export interface User {

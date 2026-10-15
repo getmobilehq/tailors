@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
               mode: 'postal' as const,
               address: formatDropoffAddress(location!),
               hours: location!.hours,
+              instructions: location!.postalInstructions,
             }
           }
         }

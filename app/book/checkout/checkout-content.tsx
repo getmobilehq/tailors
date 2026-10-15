@@ -515,7 +515,9 @@ export default function CheckoutContent() {
               </div>
               )}
 
-              {(isDropoff || isPostal) && dropoff && <DropoffAddress location={dropoff} />}
+              {(isDropoff || isPostal) && dropoff && (
+                <DropoffAddress location={dropoff} mode={isPostal ? 'postal' : 'dropoff'} />
+              )}
             </CardContent>
           </Card>
 

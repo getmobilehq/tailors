@@ -190,7 +190,7 @@ export default function ScheduleContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <DropoffAddress location={dropoff} />
+                <DropoffAddress location={dropoff} mode={isPostal ? 'postal' : 'dropoff'} />
                 {isPostal && (
                   <div className="text-sm text-muted-foreground space-y-2">
                     <p>

@@ -1,7 +1,17 @@
 import { MapPin, Clock } from 'lucide-react'
 import type { DropoffLocation } from '@/lib/types'
 
-export function DropoffAddress({ location }: { location: DropoffLocation }) {
+export function DropoffAddress({
+  location,
+  mode = 'dropoff',
+}: {
+  location: DropoffLocation
+  /** Picks which set of instructions to show - they differ by route */
+  mode?: 'dropoff' | 'postal'
+}) {
+  const instructions =
+    mode === 'postal' ? location.postalInstructions : location.instructions
+
   return (
     <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
       <div className="flex gap-3">
@@ -22,8 +32,8 @@ export function DropoffAddress({ location }: { location: DropoffLocation }) {
         <div className="text-sm text-muted-foreground">{location.hours}</div>
       </div>
 
-      {location.instructions && (
-        <p className="text-sm text-muted-foreground border-t pt-3">{location.instructions}</p>
+      {instructions && (
+        <p className="text-sm text-muted-foreground border-t pt-3">{instructions}</p>
       )}
     </div>
   )
